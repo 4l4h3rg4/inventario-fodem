@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Colores personalizados de FODEM */
+@layer base {
+  :root {
+    --fodem-primary: #B8C5D1;
+    --fodem-secondary: #E8D5C4;
+    --fodem-primary-dark: #9BA8B4;
+    --fodem-secondary-dark: #D4C1B0;
+    --fodem-text-primary: #2C3E50;
+    --fodem-text-secondary: #7F8C8D;
+    --fodem-background: #F8F9FA;
+    --fodem-surface: #FFFFFF;
+    --fodem-border: #E1E8ED;
+  }
+}
+
+/* Clases personalizadas de FODEM */
+@layer components {
+  .fodem-bg-primary {
+    background-color: var(--fodem-primary);
+  }
+  
+  .fodem-bg-secondary {
+    background-color: var(--fodem-secondary);
+  }
+  
+  .fodem-text-primary {
+    color: var(--fodem-text-primary);
+  }
+  
+  .fodem-text-secondary {
+    color: var(--fodem-text-secondary);
+  }
+  
+  .fodem-border {
+    border-color: var(--fodem-border);
+  }
+} 

@@ -1,0 +1,222 @@
+# Reglas del Proyecto - Mi Despensa (Inventario FODEM)
+
+## 🎯 Objetivo del Proyecto
+Aplicación híbrida para gestión de inventario que funciona en móvil (iOS/Android) y web, con sincronización en tiempo real y gestión de usuarios.
+
+## 🏗️ Arquitectura
+
+### Clean Architecture
+- **Core**: Reglas de negocio, entidades, casos de uso
+- **Data**: Implementación de repositorios, fuentes de datos
+- **Presentation**: UI, componentes, navegación
+- **Shared**: Utilidades, constantes, tipos
+
+### Estructura de Carpetas
+```
+src/
+├── app/                    # Expo Router (navegación)
+├── core/                   # Reglas de negocio
+│   ├── entities/          # Entidades del dominio
+│   ├── usecases/          # Casos de uso
+│   └── repositories/      # Interfaces de repositorios
+├── data/                   # Capa de datos
+│   ├── datasources/       # Fuentes de datos (Supabase)
+│   ├── repositories/      # Implementación de repositorios
+│   └── models/            # Modelos de datos
+├── presentation/           # Capa de presentación
+│   ├── screens/           # Pantallas
+│   ├── components/        # Componentes reutilizables
+│   ├── navigation/        # Configuración de navegación
+│   └── hooks/             # Custom hooks
+└── shared/                 # Utilidades compartidas
+    ├── constants/
+    ├── utils/
+    └── types/
+```
+
+## 🛠️ Tecnologías
+
+### Frontend Híbrido
+- **React Native + Expo**: Base para móvil
+- **React Native Web**: Compatibilidad web
+- **Expo Router**: Navegación universal
+- **Tamagui**: UI library híbrida
+- **TypeScript**: Tipado estático
+
+### Backend
+- **Supabase**: Base de datos PostgreSQL, autenticación, storage, real-time
+
+### Estilos
+- **Tailwind CSS**: Para web
+- **React Native Styles**: Para móvil
+- **Tamagui**: Componentes híbridos
+
+## 📋 Reglas de Desarrollo
+
+### 1. Nomenclatura
+- **Archivos**: PascalCase para componentes, camelCase para utilidades
+- **Carpetas**: camelCase
+- **Variables**: camelCase
+- **Constantes**: UPPER_SNAKE_CASE
+- **Interfaces**: PascalCase con prefijo I (ej: IProduct)
+- **Tipos**: PascalCase
+
+### 2. Componentes
+- Un componente por archivo
+- Props tipadas con TypeScript
+- Componentes híbridos que funcionen en móvil y web
+- Usar Platform.OS para diferencias entre plataformas
+
+### 3. Navegación
+- Usar Expo Router para navegación universal
+- Configurar modales con `presentation: 'modal'`
+- Evitar navegación anidada compleja
+- Usar Link para navegación declarativa
+
+### 4. Estado
+- Zustand para estado global
+- React Query para sincronización con Supabase
+- Estado local en componentes cuando sea apropiado
+
+### 5. Estilos
+- **Móvil**: React Native StyleSheet
+- **Web**: Tailwind CSS
+- **Híbrido**: Tamagui cuando sea posible
+- Usar Platform.OS para diferencias de estilos
+
+### 6. Base de Datos
+- Usar Supabase como única fuente de datos
+- Implementar RLS (Row Level Security)
+- Usar real-time subscriptions para actualizaciones
+- Manejar errores de conexión
+
+### 7. Autenticación
+- Supabase Auth para autenticación
+- Manejar estados de autenticación
+- Proteger rutas sensibles
+- Almacenar tokens de forma segura
+
+### 8. Funcionalidades Principales
+
+#### Inventario
+- CRUD de productos
+- Categorización
+- Control de stock
+- Alertas de stock bajo
+
+#### Escaneo
+- Códigos de barras
+- QR codes
+- Captura de fotos
+- Reconocimiento de productos
+
+#### Usuarios
+- Registro/Login
+- Perfiles de usuario
+- Permisos por rol
+- Invitaciones
+
+#### Notificaciones
+- Stock bajo
+- Productos vencidos
+- Actualizaciones en tiempo real
+
+## 🚨 Problemas a Evitar
+
+### Navegación
+- NO usar navegación anidada compleja
+- NO cerrar la app al presionar "atrás" en modales
+- SIEMPRE usar Expo Router para navegación
+
+### Rendimiento
+- NO hacer re-renders innecesarios
+- USAR React.memo para componentes pesados
+- IMPLEMENTAR lazy loading para listas grandes
+
+### Seguridad
+- NO exponer claves de API en el código
+- USAR variables de entorno
+- IMPLEMENTAR validación de datos
+
+### Compatibilidad
+- SIEMPRE probar en móvil y web
+- USAR Platform.OS para diferencias
+- MANTENER un solo código base
+
+## 📱 Funcionalidades Específicas
+
+### Productos
+```typescript
+interface IProduct {
+  id: string;
+  name: string;
+  description?: string;
+  category: string;
+  stock: number;
+  minStock: number;
+  price?: number;
+  barcode?: string;
+  imageUrl?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+```
+
+### Usuarios
+```typescript
+interface IUser {
+  id: string;
+  email: string;
+  name: string;
+  role: 'admin' | 'user';
+  organizationId: string;
+  createdAt: Date;
+}
+```
+
+### Organizaciones
+```typescript
+interface IOrganization {
+  id: string;
+  name: string;
+  description?: string;
+  ownerId: string;
+  createdAt: Date;
+}
+```
+
+## 🔧 Configuración
+
+### Variables de Entorno
+```env
+EXPO_PUBLIC_SUPABASE_URL=tu_url
+EXPO_PUBLIC_SUPABASE_ANON_KEY=tu_key
+```
+
+### Supabase
+- Configurar RLS policies
+- Crear tablas con relaciones
+- Configurar real-time subscriptions
+- Implementar autenticación
+
+## 📦 Scripts
+- `npm start`: Desarrollo
+- `npm run android`: Android
+- `npm run ios`: iOS
+- `npm run web`: Web
+- `npm run build`: Producción
+
+## 🎨 UI/UX Guidelines
+- Diseño limpio y minimalista
+- Colores consistentes (primary: #0ea5e9)
+- Tipografía legible
+- Espaciado consistente
+- Feedback visual para acciones
+- Estados de carga y error
+
+## 🧪 Testing
+- Componentes principales
+- Funcionalidades críticas
+- Navegación
+- Integración con Supabase
+- Compatibilidad móvil/web 

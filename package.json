@@ -1,0 +1,51 @@
+{
+  "name": "inventario-fodem",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "web": "expo start --web"
+  },
+  "dependencies": {
+    "@react-navigation/bottom-tabs": "^7.4.4",
+    "@react-navigation/native": "^7.1.16",
+    "@react-navigation/stack": "^7.4.4",
+    "@supabase/supabase-js": "^2.53.0",
+    "@tamagui/animations-react-native": "^1.132.15",
+    "@tamagui/config": "^1.132.15",
+    "@tamagui/core": "^1.132.15",
+    "@tamagui/font-inter": "^1.132.15",
+    "@tamagui/shorthands": "^1.132.15",
+    "@tamagui/theme-base": "^1.132.15",
+    "@tanstack/react-query": "^5.83.0",
+    "expo": "~53.0.20",
+    "expo-camera": "~16.1.11",
+    "expo-image-picker": "~16.1.4",
+    "expo-router": "~5.1.4",
+    "expo-secure-store": "~14.2.3",
+    "expo-status-bar": "~2.2.3",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "react-native": "0.79.5",
+    "react-native-gesture-handler": "~2.24.0",
+    "react-native-paper": "^5.14.5",
+    "react-native-reanimated": "~3.17.4",
+    "react-native-safe-area-context": "5.4.0",
+    "react-native-screens": "~4.11.1",
+    "react-native-vector-icons": "^10.3.0",
+    "react-native-web": "^0.20.0",
+    "zustand": "^5.0.6",
+    "expo-dev-client": "~5.2.4",
+    "expo-system-ui": "~5.0.10"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.25.2",
+    "@types/react": "~19.0.10",
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.11",
+    "typescript": "~5.8.3"
+  },
+  "private": true
+}
