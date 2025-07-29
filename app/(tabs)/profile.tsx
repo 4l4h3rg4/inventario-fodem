@@ -1,13 +1,37 @@
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { Platform } from 'react-native';
 import { router } from 'expo-router';
 import { FODEM_COLORS } from '../../src/shared/constants/colors';
 import { getShadowStyle } from '../../src/shared/utils/styles';
 import { Icon } from '../../src/presentation/components/Icon';
+import { useAuth } from '../../src/shared/contexts/AuthContext';
 
 export default function ProfileScreen() {
+  const { user, signOut } = useAuth();
+
   const handleGoBack = () => {
     router.back();
+  };
+
+  const handleSignOut = async () => {
+    Alert.alert(
+      'Cerrar Sesión',
+      '¿Estás seguro de que quieres cerrar sesión?',
+      [
+        {
+          text: 'Cancelar',
+          style: 'cancel',
+        },
+        {
+          text: 'Cerrar Sesión',
+          style: 'destructive',
+          onPress: async () => {
+            await signOut();
+            router.replace('/');
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -70,14 +94,14 @@ export default function ProfileScreen() {
             color: FODEM_COLORS.textPrimary,
             marginBottom: 8,
           }}>
-            Usuario
+            {user?.user_metadata?.full_name || 'Usuario'}
           </Text>
 
           <Text style={{
             fontSize: 16,
             color: FODEM_COLORS.textSecondary,
           }}>
-            usuario@ejemplo.com
+            {user?.email || 'usuario@ejemplo.com'}
           </Text>
         </View>
 
@@ -353,7 +377,7 @@ export default function ProfileScreen() {
                   color: FODEM_COLORS.textPrimary,
                   fontWeight: '500',
                 }}>
-                  usuario@ejemplo.com
+                  {user?.email || 'usuario@ejemplo.com'}
                 </Text>
                 <Text style={{
                   fontSize: 14,
@@ -364,16 +388,19 @@ export default function ProfileScreen() {
               </View>
             </View>
 
-            <TouchableOpacity style={{
-              backgroundColor: FODEM_COLORS.surface,
-              paddingHorizontal: 16,
-              paddingVertical: 12,
-              borderRadius: 8,
-              borderWidth: 1,
-              borderColor: FODEM_COLORS.border,
-              flexDirection: 'row',
-              alignItems: 'center',
-            }}>
+            <TouchableOpacity 
+              style={{
+                backgroundColor: FODEM_COLORS.surface,
+                paddingHorizontal: 16,
+                paddingVertical: 12,
+                borderRadius: 8,
+                borderWidth: 1,
+                borderColor: FODEM_COLORS.border,
+                flexDirection: 'row',
+                alignItems: 'center',
+              }}
+              onPress={handleSignOut}
+            >
               <Icon name="logout" size={16} color={FODEM_COLORS.textPrimary} />
               <Text style={{
                 color: FODEM_COLORS.textPrimary,

@@ -54,6 +54,14 @@ export const Icon: React.FC<IconProps> = ({
     success: '✅',
     error: '❌',
     loading: '⏳',
+    check: '✓',
+    
+    // Comunicación
+    email: '📧',
+    
+    // Contraseñas
+    eye: '👁️',
+    'eye-off': '🙈',
     
     // Otros
     search: '🔍',
