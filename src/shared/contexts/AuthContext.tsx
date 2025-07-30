@@ -83,12 +83,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setIsNavigating(false);
         }
       } else if (event === 'SIGNED_OUT') {
-        // User signed out, navigate to home
+        // User signed out, navigate to auth page
+        console.log('AuthContext detectó SIGNED_OUT, navegando a login...');
         setHasAppAccess(false);
         setSubscriptionInfo(null);
         setCentralUser(null);
+        setUser(null);
+        setSession(null);
         setIsNavigating(false);
-        router.replace('/');
+        router.replace('/auth');
       }
     });
 
@@ -197,28 +200,58 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     try {
-      console.log('Cerrando sesión...');
+      console.log('=== INICIANDO CIERRE DE SESIÓN ===');
       
-      console.log('Cerrando sesión en authSupabase...');
-      await authSupabase.auth.signOut();
-      console.log('authSupabase signOut completado');
+      // 1. Limpiar localStorage inmediatamente
+      console.log('Limpiando localStorage...');
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('auth-supabase-session');
+        localStorage.removeItem('despensa-supabase-session');
+        console.log('localStorage limpiado');
+      }
       
-      // console.log('Cerrando sesión en supabase...');
-      // await supabase.auth.signOut();
-      // console.log('supabase signOut completado');
-      
-      // Limpiar estados
-      console.log('Limpiando estados...');
+      // 2. Limpiar estados del contexto inmediatamente
+      console.log('Limpiando estados del contexto...');
       setHasAppAccess(false);
       setSubscriptionInfo(null);
       setCentralUser(null);
       setUser(null);
       setSession(null);
       
-      console.log('Sesión cerrada exitosamente');
+      // 3. Intentar cerrar sesión en ambos clientes (sin esperar)
+      console.log('Intentando cerrar sesiones...');
+      try {
+        supabase.auth.signOut().catch(e => console.log('Error cerrando sesión en Mi Despensa:', e));
+        authSupabase.auth.signOut().catch(e => console.log('Error cerrando sesión en Auth:', e));
+        console.log('Comandos de cierre de sesión enviados');
+      } catch (e) {
+        console.log('Error enviando comandos de cierre:', e);
+      }
+      
+      // 4. Navegar a login inmediatamente
+      console.log('Navegando a página de login...');
+      router.replace('/auth');
+      
+      console.log('=== CIERRE DE SESIÓN COMPLETADO ===');
     } catch (error) {
-      console.error('Error signing out:', error);
-      throw error; // Re-lanzar el error para que la UI pueda manejarlo
+      console.error('Error durante el cierre de sesión:', error);
+      
+      // En caso de error, limpiar todo de todas formas
+      console.log('Limpieza de emergencia...');
+      
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('auth-supabase-session');
+        localStorage.removeItem('despensa-supabase-session');
+      }
+      
+      setHasAppAccess(false);
+      setSubscriptionInfo(null);
+      setCentralUser(null);
+      setUser(null);
+      setSession(null);
+      
+      router.replace('/auth');
+      console.log('Limpieza de emergencia completada');
     }
   };
 

@@ -23,9 +23,8 @@ export default function ProfileScreen() {
       console.log('Llamando a signOut directamente...');
       setIsSigningOut(true);
       await signOut();
-      console.log('signOut completado, navegando...');
+      console.log('signOut completado');
       Alert.alert('Éxito', 'Sesión cerrada correctamente');
-      router.replace('/');
     } catch (error) {
       console.error('Error al cerrar sesión:', error);
       Alert.alert('Error', 'No se pudo cerrar sesión. Intenta nuevamente.');
