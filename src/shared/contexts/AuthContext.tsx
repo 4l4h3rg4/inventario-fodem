@@ -202,12 +202,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('=== INICIANDO CIERRE DE SESIÓN ===');
       
-      // 1. Limpiar localStorage inmediatamente
-      console.log('Limpiando localStorage...');
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('auth-supabase-session');
-        localStorage.removeItem('despensa-supabase-session');
-        console.log('localStorage limpiado');
+      // 1. Limpiar almacenamiento (web: localStorage, móvil: AsyncStorage)
+      console.log('Limpiando almacenamiento...');
+      
+      // Detectar si estamos en web o móvil de manera más robusta
+      const isWeb = typeof window !== 'undefined' && typeof localStorage !== 'undefined';
+      
+      if (isWeb) {
+        // Web: usar localStorage
+        try {
+          localStorage.removeItem('auth-supabase-session');
+          localStorage.removeItem('despensa-supabase-session');
+          console.log('localStorage limpiado (web)');
+        } catch (e) {
+          console.log('Error limpiando localStorage:', e);
+        }
+      } else {
+        // Móvil: usar AsyncStorage
+        try {
+          const AsyncStorage = require('@react-native-async-storage/async-storage');
+          await AsyncStorage.multiRemove([
+            'auth-supabase-session',
+            'despensa-supabase-session'
+          ]);
+          console.log('AsyncStorage limpiado (móvil)');
+        } catch (e) {
+          console.log('Error limpiando AsyncStorage:', e);
+        }
       }
       
       // 2. Limpiar estados del contexto inmediatamente
@@ -239,9 +260,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // En caso de error, limpiar todo de todas formas
       console.log('Limpieza de emergencia...');
       
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('auth-supabase-session');
-        localStorage.removeItem('despensa-supabase-session');
+      // Detectar plataforma de manera robusta
+      const isWeb = typeof window !== 'undefined' && typeof localStorage !== 'undefined';
+      
+      if (isWeb) {
+        // Web: localStorage
+        try {
+          localStorage.removeItem('auth-supabase-session');
+          localStorage.removeItem('despensa-supabase-session');
+          console.log('localStorage limpiado en emergencia (web)');
+        } catch (e) {
+          console.log('Error limpiando localStorage en emergencia:', e);
+        }
+      } else {
+        // Móvil: AsyncStorage
+        try {
+          const AsyncStorage = require('@react-native-async-storage/async-storage');
+          await AsyncStorage.multiRemove([
+            'auth-supabase-session',
+            'despensa-supabase-session'
+          ]);
+          console.log('AsyncStorage limpiado en emergencia (móvil)');
+        } catch (e) {
+          console.log('Error limpiando AsyncStorage en emergencia:', e);
+        }
       }
       
       setHasAppAccess(false);
