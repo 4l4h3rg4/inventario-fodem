@@ -8,15 +8,15 @@ export default function RootLayout() {
       <Stack
         screenOptions={{
           headerShown: false,
-          presentation: 'modal',
           contentStyle: {
             backgroundColor: FODEM_COLORS.background,
           },
         }}
       >
         <Stack.Screen name="index" />
-        <Stack.Screen name="auth" />
+        <Stack.Screen name="auth" options={{ presentation: 'modal' }} />
         <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="access-denied" />
       </Stack>
     </AuthProvider>
   );

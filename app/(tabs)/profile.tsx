@@ -5,33 +5,33 @@ import { FODEM_COLORS } from '../../src/shared/constants/colors';
 import { getShadowStyle } from '../../src/shared/utils/styles';
 import { Icon } from '../../src/presentation/components/Icon';
 import { useAuth } from '../../src/shared/contexts/AuthContext';
+import { useState } from 'react';
 
 export default function ProfileScreen() {
   const { user, signOut } = useAuth();
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   const handleGoBack = () => {
     router.back();
   };
 
   const handleSignOut = async () => {
-    Alert.alert(
-      'Cerrar Sesión',
-      '¿Estás seguro de que quieres cerrar sesión?',
-      [
-        {
-          text: 'Cancelar',
-          style: 'cancel',
-        },
-        {
-          text: 'Cerrar Sesión',
-          style: 'destructive',
-          onPress: async () => {
-            await signOut();
-            router.replace('/');
-          },
-        },
-      ]
-    );
+    console.log('Botón de cerrar sesión presionado');
+    
+    // Versión simple sin confirmación para probar
+    try {
+      console.log('Llamando a signOut directamente...');
+      setIsSigningOut(true);
+      await signOut();
+      console.log('signOut completado, navegando...');
+      Alert.alert('Éxito', 'Sesión cerrada correctamente');
+      router.replace('/');
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+      Alert.alert('Error', 'No se pudo cerrar sesión. Intenta nuevamente.');
+    } finally {
+      setIsSigningOut(false);
+    }
   };
 
   return (
@@ -390,25 +390,28 @@ export default function ProfileScreen() {
 
             <TouchableOpacity 
               style={{
-                backgroundColor: FODEM_COLORS.surface,
+                backgroundColor: isSigningOut ? '#6C757D' : '#DC3545',
                 paddingHorizontal: 16,
                 paddingVertical: 12,
                 borderRadius: 8,
-                borderWidth: 1,
-                borderColor: FODEM_COLORS.border,
                 flexDirection: 'row',
                 alignItems: 'center',
+                justifyContent: 'center',
+                opacity: isSigningOut ? 0.7 : 1,
+                ...getShadowStyle(),
               }}
-              onPress={handleSignOut}
+              onPress={() => {
+                console.log('TouchableOpacity presionado');
+                handleSignOut();
+              }}
+              disabled={isSigningOut}
             >
-              <Icon name="logout" size={16} color={FODEM_COLORS.textPrimary} />
               <Text style={{
-                color: FODEM_COLORS.textPrimary,
+                color: 'white',
                 fontSize: 16,
-                fontWeight: '500',
-                marginLeft: 8,
+                fontWeight: '600',
               }}>
-                Cerrar Sesión
+                {isSigningOut ? 'Cerrando Sesión...' : 'Cerrar Sesión'}
               </Text>
             </TouchableOpacity>
           </View>

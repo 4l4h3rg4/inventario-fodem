@@ -1,5 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { 
+  View, 
+  Text, 
+  TextInput, 
+  TouchableOpacity, 
+  ScrollView, 
+  StyleSheet, 
+  Alert,
+  Platform 
+} from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { FODEM_COLORS } from '../src/shared/constants/colors';
 import { getShadowStyle } from '../src/shared/utils/styles';
@@ -7,6 +16,7 @@ import { FodemLogo } from '../src/presentation/components/FodemLogo';
 import { Icon } from '../src/presentation/components/Icon';
 import { SuccessModal } from '../src/presentation/components/SuccessModal';
 import { useAuth } from '../src/shared/contexts/AuthContext';
+import { ErrorAlert } from '../src/presentation/components/ErrorAlert';
 
 export default function AuthScreen() {
   const params = useLocalSearchParams();
@@ -19,6 +29,8 @@ export default function AuthScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showErrorAlert, setShowErrorAlert] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   
   const { signIn, signUp } = useAuth();
 
@@ -74,16 +86,15 @@ export default function AuthScreen() {
       }
 
       if (result.error) {
-        Alert.alert('Error', result.error.message || 'Ocurrió un error');
-      } else {
-        if (!isLogin) {
-          setShowSuccessModal(true);
-        } else {
-          router.replace('/(tabs)');
-        }
+        setErrorMessage(result.error);
+        setShowErrorAlert(true);
+      } else if (result.success && !isLogin) {
+        setShowSuccessModal(true);
       }
-    } catch (error) {
-      Alert.alert('Error', 'Ocurrió un error inesperado');
+      // Para login exitoso, la navegación se maneja automáticamente en AuthContext
+    } catch (error: any) {
+      setErrorMessage('Ocurrió un error inesperado. Por favor intenta nuevamente.');
+      setShowErrorAlert(true);
     } finally {
       setLoading(false);
     }
@@ -108,6 +119,11 @@ export default function AuthScreen() {
     setFullName('');
   };
 
+  const handleCloseErrorAlert = () => {
+    setShowErrorAlert(false);
+    setErrorMessage('');
+  };
+
   return (
     <>
       <ScrollView style={{
@@ -120,6 +136,14 @@ export default function AuthScreen() {
           paddingTop: 60,
           minHeight: '100%',
         }}>
+          
+          {/* Alert de error */}
+          {showErrorAlert && (
+            <ErrorAlert
+              message={errorMessage}
+              onClose={handleCloseErrorAlert}
+            />
+          )}
           {/* Logo y título */}
           <View style={{
             alignItems: 'center',

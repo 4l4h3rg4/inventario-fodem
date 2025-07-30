@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
-import { authSupabase } from '../config/supabase';
+import { router } from 'expo-router';
+import { authSupabase, supabase } from '../config/supabase';
 import { AuthService, SubscriptionInfo, CentralUser } from '../services/authService';
 
 interface AuthContextType {
@@ -33,114 +34,224 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [hasAppAccess, setHasAppAccess] = useState(false);
   const [subscriptionInfo, setSubscriptionInfo] = useState<SubscriptionInfo | null>(null);
   const [centralUser, setCentralUser] = useState<CentralUser | null>(null);
+  const [isNavigating, setIsNavigating] = useState(false);
 
   useEffect(() => {
-    // Obtener sesión inicial
+    // Get initial session
     authSupabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
-    // Escuchar cambios de autenticación
-    const {
-      data: { subscription },
-    } = authSupabase.auth.onAuthStateChange(async (event, session) => {
+    // Listen for auth changes
+    const { data: { subscription } } = authSupabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event, session?.user?.email);
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
 
-      if (session?.user) {
-        await verifyAppAccess();
-      } else {
+      if (event === 'SIGNED_IN' && session?.user && !isNavigating) {
+        setIsNavigating(true);
+        console.log('Usuario autenticado, verificando acceso...');
+        
+        try {
+          const hasAccess = await AuthService.verifyFullAccess(session.user.id);
+          
+          if (hasAccess) {
+            console.log('Usuario tiene acceso, navegando a la app');
+            setHasAppAccess(true);
+            
+            // Obtener información adicional
+            const centralUserData = await AuthService.getCentralUser(session.user.id);
+            const subscriptionData = await AuthService.getSubscriptionInfo(session.user.id);
+            
+            setCentralUser(centralUserData);
+            setSubscriptionInfo(subscriptionData);
+            
+            router.replace('/(tabs)');
+          } else {
+            console.log('Usuario no tiene acceso, navegando a acceso denegado');
+            setHasAppAccess(false);
+            router.replace('/access-denied');
+          }
+        } catch (error) {
+          console.error('Error verificando acceso:', error);
+          setHasAppAccess(false);
+          router.replace('/access-denied');
+        } finally {
+          setIsNavigating(false);
+        }
+      } else if (event === 'SIGNED_OUT') {
+        // User signed out, navigate to home
         setHasAppAccess(false);
         setSubscriptionInfo(null);
         setCentralUser(null);
+        setIsNavigating(false);
+        router.replace('/');
       }
     });
 
     return () => subscription.unsubscribe();
-  }, []);
-
-  const verifyAppAccess = async () => {
-    if (!user) {
-      setHasAppAccess(false);
-      return;
-    }
-
-    try {
-      // Verificar acceso completo
-      const hasAccess = await AuthService.verifyFullAccess(user.id);
-      setHasAppAccess(hasAccess);
-
-      if (hasAccess) {
-        // Obtener información de suscripción
-        const subscription = await AuthService.getSubscriptionInfo(user.id);
-        setSubscriptionInfo(subscription);
-
-        // Obtener información del usuario central
-        const centralUserData = await AuthService.getCentralUser(user.id);
-        setCentralUser(centralUserData);
-      }
-    } catch (error) {
-      console.error('Error verifying app access:', error);
-      setHasAppAccess(false);
-    }
-  };
+  }, [isNavigating]);
 
   const signIn = async (email: string, password: string) => {
     try {
+      console.log('Intentando iniciar sesión con:', email);
+      console.log('Intentando autenticación...');
+      
       const { error } = await authSupabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
-        return { error: error.message };
+        console.error('Error en signIn:', error);
+        
+        // Mensajes específicos según el tipo de error
+        if (error.message.includes('Invalid login credentials')) {
+          return { error: 'Correo electrónico o contraseña incorrectos. Verifica tus datos e intenta nuevamente.' };
+        } else if (error.message.includes('Email not confirmed')) {
+          return { error: 'Tu cuenta no ha sido verificada. Revisa tu correo electrónico y confirma tu cuenta.' };
+        } else if (error.message.includes('Too many requests')) {
+          return { error: 'Demasiados intentos fallidos. Espera unos minutos antes de intentar nuevamente.' };
+        } else if (error.message.includes('User not found')) {
+          return { error: 'No existe una cuenta con este correo electrónico. Verifica el correo o crea una cuenta nueva.' };
+        } else {
+          return { error: `Error al iniciar sesión: ${error.message}` };
+        }
       }
 
+      console.log('Inicio de sesión exitoso');
       return {};
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error signing in:', error);
-      return { error: 'Error interno del servidor' };
+      return { error: 'Error de conexión. Verifica tu internet e intenta nuevamente.' };
     }
   };
 
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
-      // Registrar usuario en Supabase Auth
+      console.log('Iniciando registro para:', email);
+      
       const { data, error } = await authSupabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            full_name: fullName,
+          },
+        },
       });
 
       if (error) {
-        return { error: error.message };
-      }
-
-      if (data.user) {
-        // Crear usuario en la base de datos central con plan gratuito
-        const result = await AuthService.createCentralUser(email, fullName);
+        console.error('Error en signUp:', error);
         
-        if (!result.success) {
-          // Si falla la creación en la base central, eliminar el usuario de Auth
-          await authSupabase.auth.admin.deleteUser(data.user.id);
-          return { error: result.error || 'Error creando usuario' };
+        // Mensajes específicos según el tipo de error
+        if (error.message.includes('User already registered')) {
+          return { error: 'Ya existe una cuenta con este correo electrónico. Inicia sesión en su lugar.' };
+        } else if (error.message.includes('Password should be at least')) {
+          return { error: 'La contraseña debe tener al menos 6 caracteres.' };
+        } else if (error.message.includes('Invalid email')) {
+          return { error: 'El formato del correo electrónico no es válido.' };
+        } else if (error.message.includes('Unable to validate email address')) {
+          return { error: 'No se pudo validar el correo electrónico. Verifica que sea correcto.' };
+        } else if (error.message.includes('Too many requests')) {
+          return { error: 'Demasiados intentos. Espera unos minutos antes de intentar nuevamente.' };
+        } else {
+          return { error: `Error al crear cuenta: ${error.message}` };
         }
       }
 
-      return {};
-    } catch (error) {
+      if (data.user) {
+        console.log('Usuario creado en auth, creando usuario central...');
+        
+        // Crear usuario en la base de datos central
+        const centralUserResult = await AuthService.createCentralUser(
+          data.user.id,
+          email,
+          fullName
+        );
+
+        if (centralUserResult.error) {
+          console.error('Error creando usuario central:', centralUserResult.error);
+          
+          // Si el usuario ya existe en la base central, no es un error
+          if (centralUserResult.error.includes('duplicate key')) {
+            console.log('Usuario ya existe en base central, continuando...');
+            return { success: true, message: 'Cuenta creada exitosamente. Revisa tu correo para confirmar tu cuenta.' };
+          }
+          
+          return { error: 'Cuenta creada pero hubo un problema con la configuración. Contacta soporte.' };
+        }
+
+        return { success: true, message: 'Cuenta creada exitosamente. Revisa tu correo para confirmar tu cuenta.' };
+      }
+
+      return { error: 'Error inesperado al crear la cuenta.' };
+    } catch (error: any) {
       console.error('Error signing up:', error);
-      return { error: 'Error interno del servidor' };
+      return { error: 'Error de conexión. Verifica tu internet e intenta nuevamente.' };
     }
   };
 
   const signOut = async () => {
     try {
+      console.log('Cerrando sesión...');
+      
+      console.log('Cerrando sesión en authSupabase...');
       await authSupabase.auth.signOut();
+      console.log('authSupabase signOut completado');
+      
+      // console.log('Cerrando sesión en supabase...');
+      // await supabase.auth.signOut();
+      // console.log('supabase signOut completado');
+      
+      // Limpiar estados
+      console.log('Limpiando estados...');
+      setHasAppAccess(false);
+      setSubscriptionInfo(null);
+      setCentralUser(null);
+      setUser(null);
+      setSession(null);
+      
+      console.log('Sesión cerrada exitosamente');
     } catch (error) {
       console.error('Error signing out:', error);
+      throw error; // Re-lanzar el error para que la UI pueda manejarlo
+    }
+  };
+
+  const verifyAppAccess = async () => {
+    if (!user) {
+      console.log('No hay usuario, estableciendo hasAppAccess = false');
+      setHasAppAccess(false);
+      return;
+    }
+
+    try {
+      console.log('Verificando acceso para usuario:', user.id);
+      
+      // Verificar acceso completo
+      const hasAccess = await AuthService.verifyFullAccess(user.id);
+      
+      if (hasAccess) {
+        console.log('Usuario tiene acceso, estableciendo hasAppAccess = true');
+        setHasAppAccess(true);
+        
+        // Obtener información adicional
+        const centralUserData = await AuthService.getCentralUser(user.id);
+        const subscriptionData = await AuthService.getSubscriptionInfo(user.id);
+        
+        setCentralUser(centralUserData);
+        setSubscriptionInfo(subscriptionData);
+      } else {
+        console.log('Usuario no tiene acceso, estableciendo hasAppAccess = false');
+        setHasAppAccess(false);
+      }
+    } catch (error) {
+      console.error('Error verifying app access:', error);
+      setHasAppAccess(false);
     }
   };
 

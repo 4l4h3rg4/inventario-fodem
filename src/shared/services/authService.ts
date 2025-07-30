@@ -1,9 +1,10 @@
 import { authSupabase } from '../config/supabase';
 
 export interface AuthResult {
-  success: boolean;
-  userId?: string;
+  success?: boolean;
   error?: string;
+  userId?: string;
+  message?: string;
 }
 
 export interface SubscriptionInfo {
@@ -84,47 +85,44 @@ export class AuthService {
   }
 
   /**
-   * Registrar acceso a una aplicación (para futuras implementaciones)
-   */
-  static async recordAppAccess(userId: string, appName: string = APP_NAME): Promise<boolean> {
-    try {
-      // Por ahora solo verificamos el acceso
-      // En el futuro aquí se podría registrar analytics, logs, etc.
-      return await this.checkAppAccess(userId, appName);
-    } catch (error) {
-      console.error('Error recording app access:', error);
-      return false;
-    }
-  }
-
-  /**
    * Crear un nuevo usuario central con plan gratuito automáticamente
    */
-  static async createCentralUser(email: string, fullName: string): Promise<AuthResult> {
+  static async createCentralUser(userId: string, email: string, fullName: string): Promise<AuthResult> {
     try {
+      console.log('Creando usuario central:', { userId, email, fullName });
+      
       const { data, error } = await authSupabase.rpc('create_user_with_free_plan', {
         p_email: email,
-        p_full_name: fullName
+        p_full_name: fullName,
+        p_user_id: userId
       });
 
       if (error) {
         console.error('Error creating central user:', error);
-        return {
-          success: false,
-          error: error.message
-        };
+        
+        // Manejar errores específicos
+        if (error.code === '23505') {
+          return { 
+            success: true, 
+            userId: userId,
+            message: 'Usuario ya existe en el sistema central' 
+          };
+        } else if (error.code === 'PGRST202') {
+          return { 
+            error: 'Error de configuración del servidor. Contacta soporte.' 
+          };
+        } else {
+          return { 
+            error: `Error al crear usuario central: ${error.message}` 
+          };
+        }
       }
 
-      return {
-        success: true,
-        userId: data
-      };
-    } catch (error) {
+      console.log('Usuario central creado exitosamente:', data);
+      return { success: true, userId: data };
+    } catch (error: any) {
       console.error('Error creating central user:', error);
-      return {
-        success: false,
-        error: 'Error interno del servidor'
-      };
+      return { error: 'Error de conexión al crear usuario central' };
     }
   }
 
@@ -133,6 +131,8 @@ export class AuthService {
    */
   static async getCentralUser(userId: string): Promise<CentralUser | null> {
     try {
+      console.log('Buscando usuario central con ID:', userId);
+      
       const { data, error } = await authSupabase
         .from('users')
         .select('*')
@@ -144,6 +144,7 @@ export class AuthService {
         return null;
       }
 
+      console.log('Usuario central encontrado:', data);
       return data;
     } catch (error) {
       console.error('Error getting central user:', error);
@@ -156,55 +157,27 @@ export class AuthService {
    */
   static async verifyFullAccess(userId: string, appName: string = APP_NAME): Promise<boolean> {
     try {
-      // Verificar que el usuario existe
-      const user = await this.getCentralUser(userId);
-      if (!user) {
+      console.log('Verificando acceso para usuario:', userId);
+      
+      // Verificar que el usuario existe en la base de datos central
+      const centralUser = await this.getCentralUser(userId);
+      if (!centralUser) {
+        console.log('Usuario no encontrado en base central');
         return false;
       }
 
-      // Verificar acceso a la aplicación
+      // Verificar que tiene acceso a la aplicación
       const hasAppAccess = await this.checkAppAccess(userId, appName);
       if (!hasAppAccess) {
+        console.log('Usuario no tiene acceso a la aplicación');
         return false;
       }
 
-      // Verificar que tiene una suscripción activa
-      const subscriptionInfo = await this.getSubscriptionInfo(userId);
-      if (!subscriptionInfo || subscriptionInfo.status !== 'active') {
-        return false;
-      }
-
+      console.log('Usuario tiene acceso completo');
       return true;
     } catch (error) {
       console.error('Error verifying full access:', error);
       return false;
-    }
-  }
-
-  /**
-   * Obtener todas las aplicaciones a las que tiene acceso un usuario
-   */
-  static async getUserApps(userId: string): Promise<string[]> {
-    try {
-      const { data, error } = await authSupabase
-        .from('user_app_access')
-        .select(`
-          app_id,
-          available_apps!inner(app_name, display_name, is_active)
-        `)
-        .eq('user_id', userId)
-        .eq('is_active', true)
-        .eq('available_apps.is_active', true);
-
-      if (error) {
-        console.error('Error getting user apps:', error);
-        return [];
-      }
-
-      return data?.map(item => item.available_apps.app_name) || [];
-    } catch (error) {
-      console.error('Error getting user apps:', error);
-      return [];
     }
   }
 } 

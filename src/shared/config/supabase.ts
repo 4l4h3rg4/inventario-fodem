@@ -1,110 +1,30 @@
 import { createClient } from '@supabase/supabase-js';
-import {
-  SUPABASE_URL,
-  SUPABASE_ANON_KEY,
-  AUTH_SUPABASE_URL,
-  AUTH_SUPABASE_ANON_KEY,
-} from '@env';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { SUPABASE_URL, SUPABASE_ANON_KEY, AUTH_SUPABASE_URL, AUTH_SUPABASE_ANON_KEY } from '@env';
 
-// Configuración para la base de datos de autenticación central
-const authSupabaseUrl = AUTH_SUPABASE_URL;
-const authSupabaseAnonKey = AUTH_SUPABASE_ANON_KEY;
+// Cliente para la base de datos de autenticación central (para auth)
+export const authSupabase = createClient(AUTH_SUPABASE_URL, AUTH_SUPABASE_ANON_KEY, {
+  auth: {
+    storage: AsyncStorage,
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: false,
+    storageKey: 'auth-supabase-session', // Clave única para auth
+  },
+});
 
-// Configuración para la base de datos de Mi Despensa
-const appSupabaseUrl = SUPABASE_URL;
-const appSupabaseAnonKey = SUPABASE_ANON_KEY;
+// Cliente para la base de datos de Mi Despensa (para datos del inventario)
+export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: {
+    storage: AsyncStorage,
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: false,
+    storageKey: 'despensa-supabase-session', // Clave única para Mi Despensa
+  },
+});
 
-// Cliente para autenticación central
-export const authSupabase = createClient(authSupabaseUrl, authSupabaseAnonKey);
 
-// Cliente para la aplicación Mi Despensa
-export const supabase = createClient(appSupabaseUrl, appSupabaseAnonKey);
-
-// Tipos para la base de datos de autenticación central
-export interface AuthDatabase {
-  public: {
-    Tables: {
-      users: {
-        Row: {
-          id: string;
-          email: string;
-          full_name: string | null;
-          avatar_url: string | null;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          email: string;
-          full_name?: string | null;
-          avatar_url?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          email?: string;
-          full_name?: string | null;
-          avatar_url?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-      };
-      subscriptions: {
-        Row: {
-          id: string;
-          user_id: string;
-          plan_type: 'basic' | 'premium' | 'enterprise';
-          status: 'active' | 'cancelled' | 'expired';
-          apps: string[];
-          created_at: string;
-          expires_at: string | null;
-        };
-        Insert: {
-          id?: string;
-          user_id: string;
-          plan_type: 'basic' | 'premium' | 'enterprise';
-          status?: 'active' | 'cancelled' | 'expired';
-          apps?: string[];
-          created_at?: string;
-          expires_at?: string | null;
-        };
-        Update: {
-          id?: string;
-          user_id?: string;
-          plan_type?: 'basic' | 'premium' | 'enterprise';
-          status?: 'active' | 'cancelled' | 'expired';
-          apps?: string[];
-          created_at?: string;
-          expires_at?: string | null;
-        };
-      };
-      app_access: {
-        Row: {
-          id: string;
-          user_id: string;
-          app_name: string;
-          access_token: string | null;
-          last_access: string;
-        };
-        Insert: {
-          id?: string;
-          user_id: string;
-          app_name: string;
-          access_token?: string | null;
-          last_access?: string;
-        };
-        Update: {
-          id?: string;
-          user_id?: string;
-          app_name?: string;
-          access_token?: string | null;
-          last_access?: string;
-        };
-      };
-    };
-  };
-}
 
 // Tipos para la base de datos de Mi Despensa (mantener los existentes)
 export interface Database {
