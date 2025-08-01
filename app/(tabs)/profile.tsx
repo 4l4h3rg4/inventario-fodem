@@ -18,6 +18,11 @@ interface HouseholdMember {
   household_id: string;
   role: 'owner' | 'admin' | 'member';
   joined_at: string;
+  user_profiles?: {
+    full_name: string | null;
+    username: string | null;
+    email?: string | null;
+  } | null;
 }
 
 interface HouseholdInvitation {
@@ -43,6 +48,7 @@ export default function ProfileScreen() {
   const [selectedHousehold, setSelectedHousehold] = useState<any>(null);
   const [householdMembers, setHouseholdMembers] = useState<HouseholdMember[]>([]);
   const [householdInvitations, setHouseholdInvitations] = useState<HouseholdInvitation[]>([]);
+  const [membersLoading, setMembersLoading] = useState(false);
   const [showCreateHouseholdModal, setShowCreateHouseholdModal] = useState(false);
   const [showInvitationModal, setShowInvitationModal] = useState(false);
   const [showIconSelector, setShowIconSelector] = useState(false);
@@ -72,14 +78,34 @@ export default function ProfileScreen() {
     if (!selectedHousehold) return;
 
     try {
-      // Cargar miembros del hogar
+      setMembersLoading(true);
+      
+      // Cargar miembros del hogar con información del perfil de usuario en una sola consulta
       const { data: membersData, error: membersError } = await supabase
         .from('household_members')
-        .select('*')
+        .select(`
+          *,
+          user_profiles (
+            full_name,
+            username
+          )
+        `)
         .eq('household_id', selectedHousehold.id);
 
       if (!membersError && membersData) {
+        console.log('Miembros cargados:', membersData);
         setHouseholdMembers(membersData);
+      } else if (membersError) {
+        console.error('Error cargando miembros:', membersError);
+        // Fallback: cargar solo miembros básicos si falla el join
+        const { data: basicMembersData, error: basicMembersError } = await supabase
+          .from('household_members')
+          .select('*')
+          .eq('household_id', selectedHousehold.id);
+        
+        if (!basicMembersError && basicMembersData) {
+          setHouseholdMembers(basicMembersData);
+        }
       }
 
       // Cargar invitaciones activas
@@ -95,6 +121,8 @@ export default function ProfileScreen() {
       }
     } catch (error) {
       console.error('Error loading household details:', error);
+    } finally {
+      setMembersLoading(false);
     }
   };
 
@@ -194,6 +222,26 @@ export default function ProfileScreen() {
       case 'member': return 'Miembro';
       default: return role;
     }
+  };
+
+  const getMemberDisplayName = (member: HouseholdMember) => {
+    // Si tiene perfil con nombre completo, usarlo
+    if (member.user_profiles?.full_name) {
+      return member.user_profiles.full_name;
+    }
+    
+    // Si tiene username, usarlo
+    if (member.user_profiles?.username) {
+      return member.user_profiles.username;
+    }
+    
+    // Si es el usuario actual, mostrar "Tú"
+    if (member.user_id === user?.id) {
+      return 'Tú';
+    }
+    
+    // Fallback: mostrar ID truncado
+    return `Usuario ${member.user_id.slice(0, 8)}`;
   };
 
   const handleIconSelect = (icon: string) => {
@@ -657,43 +705,108 @@ export default function ProfileScreen() {
                     </Text>
                   </View>
                   
-                  <TouchableOpacity
-                    style={{
-                      backgroundColor: FODEM_COLORS.secondary,
-                      paddingHorizontal: 12,
-                      paddingVertical: 6,
-                      borderRadius: 8,
-                    }}
-                    onPress={() => setShowInvitationModal(true)}
-                  >
-                    <Text style={{
-                      color: FODEM_COLORS.textPrimary,
-                      fontSize: 14,
-                      fontWeight: '600',
-                    }}>
-                      Invitar
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-
-                {householdMembers.length > 0 ? (
-                  <View style={{ gap: 8 }}>
-                    {householdMembers.map((member) => (
-                      <View key={member.id} style={{
+                  <View style={{ flexDirection: 'row', gap: 8 }}>
+                    <TouchableOpacity
+                      style={{
                         backgroundColor: FODEM_COLORS.background,
-                        padding: 12,
+                        paddingHorizontal: 12,
+                        paddingVertical: 6,
                         borderRadius: 8,
                         borderWidth: 1,
                         borderColor: FODEM_COLORS.border,
+                        opacity: membersLoading ? 0.6 : 1,
+                      }}
+                      onPress={loadHouseholdDetails}
+                      disabled={membersLoading}
+                    >
+                      <Text style={{
+                        color: FODEM_COLORS.textPrimary,
+                        fontSize: 14,
+                        fontWeight: '600',
+                      }}>
+                        {membersLoading ? 'Actualizando...' : 'Actualizar'}
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={{
+                        backgroundColor: FODEM_COLORS.secondary,
+                        paddingHorizontal: 12,
+                        paddingVertical: 6,
+                        borderRadius: 8,
+                      }}
+                      onPress={() => setShowInvitationModal(true)}
+                    >
+                      <Text style={{
+                        color: FODEM_COLORS.textPrimary,
+                        fontSize: 14,
+                        fontWeight: '600',
+                      }}>
+                        Invitar
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                {membersLoading ? (
+                  <View style={{
+                    alignItems: 'center',
+                    paddingVertical: 20,
+                  }}>
+                    <Text style={{
+                      fontSize: 14,
+                      color: FODEM_COLORS.textSecondary,
+                      textAlign: 'center',
+                    }}>
+                      Cargando miembros...
+                    </Text>
+                  </View>
+                ) : householdMembers.length > 0 ? (
+                  <View style={{ gap: 8 }}>
+                    {householdMembers.map((member) => (
+                      <View key={member.id} style={{
+                        backgroundColor: member.user_id === user?.id ? FODEM_COLORS.primary + '20' : FODEM_COLORS.background,
+                        padding: 12,
+                        borderRadius: 8,
+                        borderWidth: 1,
+                        borderColor: member.user_id === user?.id ? FODEM_COLORS.primary : FODEM_COLORS.border,
                       }}>
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <Text style={{
-                            fontSize: 14,
-                            fontWeight: '500',
-                            color: FODEM_COLORS.textPrimary,
-                          }}>
-                            Usuario {member.user_id.slice(0, 8)}
-                          </Text>
+                          <View style={{ flex: 1 }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                              <Text style={{
+                                fontSize: 14,
+                                fontWeight: '500',
+                                color: FODEM_COLORS.textPrimary,
+                              }}>
+                                {getMemberDisplayName(member)}
+                              </Text>
+                              {member.user_id === user?.id && (
+                                <View style={{
+                                  backgroundColor: FODEM_COLORS.primary,
+                                  paddingHorizontal: 6,
+                                  paddingVertical: 2,
+                                  borderRadius: 8,
+                                }}>
+                                  <Text style={{
+                                    fontSize: 10,
+                                    fontWeight: '600',
+                                    color: FODEM_COLORS.textLight,
+                                  }}>
+                                    TÚ
+                                  </Text>
+                                </View>
+                              )}
+                            </View>
+                            {member.user_profiles?.email && (
+                              <Text style={{
+                                fontSize: 12,
+                                color: FODEM_COLORS.textSecondary,
+                                marginTop: 2,
+                              }}>
+                                {member.user_profiles.email}
+                              </Text>
+                            )}
+                          </View>
                           <View style={{
                             backgroundColor: member.role === 'owner' ? FODEM_COLORS.primary : 
                                            member.role === 'admin' ? FODEM_COLORS.secondary : '#6C757D',
