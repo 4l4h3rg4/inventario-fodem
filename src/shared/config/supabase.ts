@@ -4,18 +4,8 @@ import { EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY } from '@env';
 
 // Verificar que las variables estén definidas
 if (!EXPO_PUBLIC_SUPABASE_URL || !EXPO_PUBLIC_SUPABASE_ANON_KEY) {
-  console.error('❌ ERROR: Variables de entorno no configuradas');
-  console.error('EXPO_PUBLIC_SUPABASE_URL:', EXPO_PUBLIC_SUPABASE_URL ? 'Definida' : 'NO DEFINIDA');
-  console.error('EXPO_PUBLIC_SUPABASE_ANON_KEY:', EXPO_PUBLIC_SUPABASE_ANON_KEY ? 'Definida' : 'NO DEFINIDA');
-  console.warn('⚠️ Usando configuración por defecto. Verifica tu archivo .env');
-  console.warn('📝 Crea un archivo .env en la raíz del proyecto con:');
-  console.warn('   EXPO_PUBLIC_SUPABASE_URL=tu_url_de_supabase');
-  console.warn('   EXPO_PUBLIC_SUPABASE_ANON_KEY=tu_clave_anonima');
+  throw new Error('Configuración de Supabase no encontrada. Verifica las variables de entorno.');
 }
-
-console.log('✅ Configurando Supabase con variables de entorno');
-console.log('URL:', EXPO_PUBLIC_SUPABASE_URL || 'NO CONFIGURADA');
-console.log('Clave configurada:', EXPO_PUBLIC_SUPABASE_ANON_KEY ? 'SÍ' : 'NO');
 
 // Cliente único para la base de datos de Mi Despensa (con autenticación integrada)
 export const supabase = createClient(

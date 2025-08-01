@@ -32,7 +32,11 @@
       "description": "Aplicación de gestión de inventario para hogares",
       "lang": "es",
       "themeColor": "#ffffff",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#ffffff",
+      "meta": {
+        "apple-mobile-web-app-capable": "yes",
+        "apple-mobile-web-app-status-bar-style": "default"
+      }
     },
     "plugins": [
       "expo-secure-store",
