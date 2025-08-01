@@ -7,15 +7,19 @@ import { FODEM_COLORS } from '../../src/shared/constants/colors';
 import { getShadowStyle } from '../../src/shared/utils/styles';
 import { Icon } from '../../src/presentation/components/Icon';
 import { useAuth } from '../../src/shared/contexts/AuthContext';
-import { HouseholdService } from '../../src/shared/services/householdService';
+import { useHousehold } from '../../src/shared/contexts/HouseholdContext';
 import { ProductService, Product, CreateProductData } from '../../src/shared/services/productService';
 
 export default function ManageProductsScreen() {
   const { user } = useAuth();
-  const [currentHousehold, setCurrentHousehold] = useState<any>(null);
-  const [userHouseholds, setUserHouseholds] = useState<any[]>([]);
+  const { 
+    currentHousehold, 
+    userHouseholds, 
+    loading: householdsLoading,
+    setCurrentHousehold,
+    refreshHouseholds 
+  } = useHousehold();
   const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
   const [showHouseholdSelector, setShowHouseholdSelector] = useState(false);
   const [showEditProductModal, setShowEditProductModal] = useState(false);
   const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
@@ -30,35 +34,12 @@ export default function ManageProductsScreen() {
   });
 
   useEffect(() => {
-    loadUserHouseholds();
-  }, []);
-
-  useEffect(() => {
     if (currentHousehold) {
       loadProducts();
     }
   }, [currentHousehold]);
 
-  const loadUserHouseholds = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await HouseholdService.getUserHouseholds();
-      
-      if (error) {
-        console.error('Error loading households:', error);
-        return;
-      }
-
-      if (data && data.length > 0) {
-        setUserHouseholds(data);
-        setCurrentHousehold(data[0]);
-      }
-    } catch (error) {
-      console.error('Error loading households:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // El contexto ya maneja la carga de hogares automáticamente
 
   const loadProducts = async () => {
     if (!currentHousehold) return;
@@ -159,7 +140,7 @@ export default function ManageProductsScreen() {
     router.back();
   };
 
-  if (loading) {
+  if (householdsLoading) {
     return (
       <View style={{ 
         flex: 1, 

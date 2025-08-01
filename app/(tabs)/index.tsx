@@ -7,15 +7,19 @@ import { FODEM_COLORS } from '../../src/shared/constants/colors';
 import { getShadowStyle } from '../../src/shared/utils/styles';
 import { Icon } from '../../src/presentation/components/Icon';
 import { useAuth } from '../../src/shared/contexts/AuthContext';
-import { HouseholdService } from '../../src/shared/services/householdService';
+import { useHousehold } from '../../src/shared/contexts/HouseholdContext';
 import { ProductService, Product, CreateProductData } from '../../src/shared/services/productService';
 
 export default function InventoryScreen() {
   const { user } = useAuth();
-  const [currentHousehold, setCurrentHousehold] = useState<any>(null);
-  const [userHouseholds, setUserHouseholds] = useState<any[]>([]);
+  const { 
+    currentHousehold, 
+    userHouseholds, 
+    loading: householdsLoading,
+    setCurrentHousehold,
+    refreshHouseholds 
+  } = useHousehold();
   const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'stock' | 'shopping'>('stock');
   const [showHouseholdSelector, setShowHouseholdSelector] = useState(false);
   const [showAddProductModal, setShowAddProductModal] = useState(false);
@@ -32,42 +36,12 @@ export default function InventoryScreen() {
   const [showCustomPurchaseInput, setShowCustomPurchaseInput] = useState(false);
 
   useEffect(() => {
-    loadUserHouseholds();
-  }, []);
-
-  useEffect(() => {
     if (currentHousehold) {
       loadProducts();
     }
   }, [currentHousehold]);
 
-  // Remover useFocusEffect para evitar llamadas duplicadas
-  // useFocusEffect(
-  //   useCallback(() => {
-  //     loadUserHouseholds();
-  //   }, [])
-  // );
-
-  const loadUserHouseholds = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await HouseholdService.getUserHouseholds();
-      
-      if (error) {
-        console.error('Error loading households:', error);
-        return;
-      }
-
-      if (data && data.length > 0) {
-        setUserHouseholds(data);
-        setCurrentHousehold(data[0]); // Usar el primer hogar como activo
-      }
-    } catch (error) {
-      console.error('Error loading households:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // El contexto ya maneja la carga de hogares automáticamente
 
   const loadProducts = async () => {
     if (!currentHousehold || productsLoading) return;
@@ -127,9 +101,7 @@ export default function InventoryScreen() {
   };
 
   // Función para recargar hogares (se puede llamar desde otras páginas)
-  const refreshHouseholds = () => {
-    loadUserHouseholds();
-  };
+  // refreshHouseholds ya está disponible desde el contexto
 
   const handleUpdateStock = async (product: Product, changeAmount: number) => {
     try {
@@ -207,7 +179,7 @@ export default function InventoryScreen() {
     return products.filter(product => product.current_stock < product.ideal_amount);
   };
 
-  if (loading) {
+  if (householdsLoading) {
     return (
       <View style={{ 
         flex: 1, 

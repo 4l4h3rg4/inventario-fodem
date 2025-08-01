@@ -7,6 +7,7 @@ import { Icon } from '../../src/presentation/components/Icon';
 import { IconSelector } from '../../src/presentation/components/IconSelector';
 
 import { useAuth } from '../../src/shared/contexts/AuthContext';
+import { useHousehold } from '../../src/shared/contexts/HouseholdContext';
 import { useState, useEffect, useCallback } from 'react';
 import { HouseholdService } from '../../src/shared/services/householdService';
 import { supabase } from '../../src/shared/config/supabase';
@@ -31,12 +32,17 @@ interface HouseholdInvitation {
 
 export default function ProfileScreen() {
   const { user, signOut } = useAuth();
+  const { 
+    currentHousehold, 
+    userHouseholds, 
+    loading: householdsLoading,
+    setCurrentHousehold,
+    refreshHouseholds 
+  } = useHousehold();
   const [isSigningOut, setIsSigningOut] = useState(false);
-  const [userHouseholds, setUserHouseholds] = useState<any[]>([]);
   const [selectedHousehold, setSelectedHousehold] = useState<any>(null);
   const [householdMembers, setHouseholdMembers] = useState<HouseholdMember[]>([]);
   const [householdInvitations, setHouseholdInvitations] = useState<HouseholdInvitation[]>([]);
-  const [loading, setLoading] = useState(true);
   const [showCreateHouseholdModal, setShowCreateHouseholdModal] = useState(false);
   const [showInvitationModal, setShowInvitationModal] = useState(false);
   const [showIconSelector, setShowIconSelector] = useState(false);
@@ -47,54 +53,20 @@ export default function ProfileScreen() {
   });
 
   useEffect(() => {
-    loadUserHouseholds();
-  }, []);
-
-  useEffect(() => {
-    if (selectedHousehold) {
+    if (currentHousehold) {
+      setSelectedHousehold(currentHousehold);
       loadHouseholdDetails();
     }
-  }, [selectedHousehold]);
+  }, [currentHousehold]);
 
   // Recargar hogares cuando se regresa a esta página
   useFocusEffect(
     useCallback(() => {
-      loadUserHouseholds();
+      refreshHouseholds();
     }, [])
   );
 
-  const loadUserHouseholds = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await HouseholdService.getUserHouseholds();
-      
-      if (error) {
-        console.error('Error loading households:', error);
-        return;
-      }
-
-      setUserHouseholds(data || []);
-      
-      // Mantener la casa seleccionada si ya existe, o seleccionar la primera
-      if (data && data.length > 0) {
-        if (selectedHousehold) {
-          // Buscar si la casa seleccionada sigue existiendo
-          const currentSelected = data.find(h => h.id === selectedHousehold.id);
-          if (currentSelected) {
-            setSelectedHousehold(currentSelected);
-          } else {
-            setSelectedHousehold(data[0]);
-          }
-        } else {
-          setSelectedHousehold(data[0]);
-        }
-      }
-    } catch (error) {
-      console.error('Error loading households:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // El contexto ya maneja la carga de hogares automáticamente
 
   const loadHouseholdDetails = async () => {
     if (!selectedHousehold) return;
@@ -146,7 +118,7 @@ export default function ProfileScreen() {
       if (data) {
         setShowCreateHouseholdModal(false);
         setNewHousehold({ name: '', icon: '🏠' });
-        loadUserHouseholds(); // Recargar la lista
+        refreshHouseholds(); // Recargar la lista usando el contexto
         Alert.alert('Éxito', 'Hogar creado correctamente');
       }
     } catch (error) {
@@ -313,7 +285,7 @@ export default function ProfileScreen() {
     );
   };
 
-  if (loading) {
+  if (householdsLoading) {
     return (
       <View style={{ 
         flex: 1, 
