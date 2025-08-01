@@ -1,4 +1,8 @@
 import { ExpoRoot } from 'expo-router';
+import { configureConsoleWarnings } from './src/shared/config/consoleConfig';
+
+// Configurar advertencias de consola
+configureConsoleWarnings();
 
 export default function App() {
   const ctx = require.context('./app');

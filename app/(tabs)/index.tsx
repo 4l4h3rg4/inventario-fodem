@@ -27,6 +27,9 @@ export default function InventoryScreen() {
     household_id: '',
   });
   const [productsLoading, setProductsLoading] = useState(false);
+  const [customPurchaseProduct, setCustomPurchaseProduct] = useState<Product | null>(null);
+  const [customPurchaseAmount, setCustomPurchaseAmount] = useState('');
+  const [showCustomPurchaseInput, setShowCustomPurchaseInput] = useState(false);
 
   useEffect(() => {
     loadUserHouseholds();
@@ -162,6 +165,36 @@ export default function InventoryScreen() {
     }
   };
 
+  const handleCustomPurchase = (product: Product) => {
+    setCustomPurchaseProduct(product);
+    setCustomPurchaseAmount('');
+    setShowCustomPurchaseInput(true);
+  };
+
+  const handleConfirmCustomPurchase = async () => {
+    if (!customPurchaseProduct || !customPurchaseAmount.trim()) {
+      Alert.alert('Error', 'Por favor ingresa una cantidad válida');
+      return;
+    }
+
+    const amount = parseInt(customPurchaseAmount);
+    if (isNaN(amount) || amount <= 0) {
+      Alert.alert('Error', 'Por favor ingresa un número válido mayor a 0');
+      return;
+    }
+
+    await handleUpdateStock(customPurchaseProduct, amount);
+    setShowCustomPurchaseInput(false);
+    setCustomPurchaseProduct(null);
+    setCustomPurchaseAmount('');
+  };
+
+  const handleCancelCustomPurchase = () => {
+    setShowCustomPurchaseInput(false);
+    setCustomPurchaseProduct(null);
+    setCustomPurchaseAmount('');
+  };
+
   const handleSettings = () => {
     router.push('/(tabs)/profile');
   };
@@ -218,6 +251,28 @@ export default function InventoryScreen() {
             alignItems: 'center',
             gap: 12,
           }}>
+                          <TouchableOpacity
+                style={{
+                  backgroundColor: FODEM_COLORS.secondary,
+                  paddingHorizontal: 12,
+                  paddingVertical: 6,
+                  borderRadius: 16,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                }}
+                onPress={() => router.push('/(tabs)/manage-products')}
+              >
+                <Icon name="edit" size={16} color={FODEM_COLORS.textPrimary} />
+                <Text style={{
+                  color: FODEM_COLORS.textPrimary,
+                  fontSize: 14,
+                  fontWeight: '600',
+                  marginLeft: 6,
+                }}>
+                  Gestionar
+                </Text>
+              </TouchableOpacity>
+            
             {currentHousehold && (
             <TouchableOpacity
               style={{
@@ -700,6 +755,27 @@ export default function InventoryScreen() {
                             </Text>
                           </TouchableOpacity>
                         )}
+
+                        {/* Botón "Otro" para compra personalizada */}
+                        <TouchableOpacity
+                          style={{
+                            backgroundColor: FODEM_COLORS.border,
+                            paddingVertical: 12,
+                            paddingHorizontal: 16,
+                            borderRadius: 8,
+                            alignItems: 'center',
+                            minWidth: 80,
+                          }}
+                          onPress={() => handleCustomPurchase(product)}
+                        >
+                          <Text style={{
+                            color: FODEM_COLORS.textPrimary,
+                            fontSize: 14,
+                            fontWeight: '600',
+                          }}>
+                            Otro...
+                          </Text>
+                        </TouchableOpacity>
                       </View>
                     </View>
                   );
@@ -1001,6 +1077,118 @@ export default function InventoryScreen() {
                   fontWeight: '600',
                 }}>
                   Crear
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal Compra Personalizada */}
+      <Modal
+        visible={showCustomPurchaseInput}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={handleCancelCustomPurchase}
+      >
+        <View style={{
+          flex: 1,
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: 20,
+        }}>
+          <View style={{
+            backgroundColor: FODEM_COLORS.surface,
+            borderRadius: 16,
+            padding: 24,
+            width: '100%',
+            maxWidth: 400,
+            ...getShadowStyle(),
+          }}>
+            <Text style={{
+              fontSize: 20,
+              fontWeight: '600',
+              color: FODEM_COLORS.textPrimary,
+              marginBottom: 8,
+              textAlign: 'center',
+            }}>
+              Comprar Cantidad Personalizada
+            </Text>
+            
+            <Text style={{
+              fontSize: 16,
+              color: FODEM_COLORS.textSecondary,
+              marginBottom: 24,
+              textAlign: 'center',
+            }}>
+              {customPurchaseProduct?.name}
+            </Text>
+
+            <View style={{ marginBottom: 24 }}>
+              <Text style={{
+                fontSize: 14,
+                fontWeight: '500',
+                color: FODEM_COLORS.textPrimary,
+                marginBottom: 8,
+              }}>
+                Cantidad a comprar
+              </Text>
+              <TextInput
+                style={{
+                  backgroundColor: FODEM_COLORS.background,
+                  padding: 16,
+                  borderRadius: 8,
+                  borderWidth: 1,
+                  borderColor: FODEM_COLORS.border,
+                  color: FODEM_COLORS.textPrimary,
+                  fontSize: 16,
+                  textAlign: 'center',
+                }}
+                value={customPurchaseAmount}
+                onChangeText={setCustomPurchaseAmount}
+                keyboardType="numeric"
+                placeholder="Ej: 5"
+                placeholderTextColor={FODEM_COLORS.textSecondary}
+                autoFocus={true}
+              />
+            </View>
+
+            <View style={{ flexDirection: 'row', gap: 12 }}>
+              <TouchableOpacity
+                style={{
+                  flex: 1,
+                  backgroundColor: FODEM_COLORS.secondary,
+                  paddingVertical: 12,
+                  borderRadius: 8,
+                  alignItems: 'center',
+                }}
+                onPress={handleCancelCustomPurchase}
+              >
+                <Text style={{
+                  color: FODEM_COLORS.textPrimary,
+                  fontSize: 16,
+                  fontWeight: '600',
+                }}>
+                  Cancelar
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={{
+                  flex: 1,
+                  backgroundColor: FODEM_COLORS.primary,
+                  paddingVertical: 12,
+                  borderRadius: 8,
+                  alignItems: 'center',
+                }}
+                onPress={handleConfirmCustomPurchase}
+              >
+                <Text style={{
+                  color: FODEM_COLORS.textLight,
+                  fontSize: 16,
+                  fontWeight: '600',
+                }}>
+                  Confirmar
                 </Text>
               </TouchableOpacity>
             </View>

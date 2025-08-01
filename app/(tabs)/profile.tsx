@@ -5,7 +5,7 @@ import { FODEM_COLORS } from '../../src/shared/constants/colors';
 import { getShadowStyle } from '../../src/shared/utils/styles';
 import { Icon } from '../../src/presentation/components/Icon';
 import { IconSelector } from '../../src/presentation/components/IconSelector';
-import { DatabaseStatus } from '../../src/presentation/components/DatabaseStatus';
+
 import { useAuth } from '../../src/shared/contexts/AuthContext';
 import { useState, useEffect, useCallback } from 'react';
 import { HouseholdService } from '../../src/shared/services/householdService';
@@ -40,7 +40,7 @@ export default function ProfileScreen() {
   const [showCreateHouseholdModal, setShowCreateHouseholdModal] = useState(false);
   const [showInvitationModal, setShowInvitationModal] = useState(false);
   const [showIconSelector, setShowIconSelector] = useState(false);
-  const [showDatabaseStatus, setShowDatabaseStatus] = useState(false);
+
   const [newHousehold, setNewHousehold] = useState({
     name: '',
     icon: '🏠',
@@ -918,28 +918,7 @@ export default function ProfileScreen() {
               </View>
             </View>
 
-            <TouchableOpacity
-              style={{
-                backgroundColor: FODEM_COLORS.secondary,
-                paddingHorizontal: 16,
-                paddingVertical: 12,
-                borderRadius: 8,
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: 12,
-                ...getShadowStyle(),
-              }}
-              onPress={() => setShowDatabaseStatus(true)}
-            >
-              <Text style={{
-                color: FODEM_COLORS.textPrimary,
-                fontSize: 14,
-                fontWeight: '600',
-              }}>
-                🔍 Estado de Base de Datos
-              </Text>
-            </TouchableOpacity>
+
 
             <TouchableOpacity 
               style={{
@@ -1194,11 +1173,7 @@ export default function ProfileScreen() {
         selectedIcon={newHousehold.icon}
       />
 
-      {/* Modal de estado de base de datos */}
-      <DatabaseStatus
-        visible={showDatabaseStatus}
-        onClose={() => setShowDatabaseStatus(false)}
-      />
+
     </ScrollView>
   );
 } 

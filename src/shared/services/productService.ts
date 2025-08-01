@@ -133,4 +133,59 @@ export class ProductService {
       return { success: false, error: 'Error de conexión' };
     }
   }
+
+  static async updateProduct(updateData: {
+    product_id: string;
+    name: string;
+    current_stock: number;
+    min_recommended: number;
+    ideal_amount: number;
+  }): Promise<{ success: boolean; error: string | null }> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        return { success: false, error: 'Usuario no autenticado' };
+      }
+
+      const { error } = await supabase
+        .from('products')
+        .update({
+          name: updateData.name,
+          current_stock: updateData.current_stock,
+          min_recommended: updateData.min_recommended,
+          ideal_amount: updateData.ideal_amount,
+        })
+        .eq('id', updateData.product_id);
+
+      if (error) {
+        return { success: false, error: 'Error al actualizar producto' };
+      }
+
+      return { success: true, error: null };
+    } catch (error) {
+      return { success: false, error: 'Error de conexión' };
+    }
+  }
+
+  static async deleteProduct(productId: string): Promise<{ success: boolean; error: string | null }> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        return { success: false, error: 'Usuario no autenticado' };
+      }
+
+      const { error } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', productId);
+
+      if (error) {
+        return { success: false, error: 'Error al eliminar producto' };
+      }
+
+      return { success: true, error: null };
+    } catch (error) {
+      return { success: false, error: 'Error de conexión' };
+    }
+  }
 } 

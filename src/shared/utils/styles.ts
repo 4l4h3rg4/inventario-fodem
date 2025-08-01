@@ -15,4 +15,21 @@ export const getShadowStyle = (color: string = FODEM_COLORS.textPrimary) => {
       elevation: 3,
     };
   }
+};
+
+// Función para sombras más pronunciadas
+export const getStrongShadowStyle = (color: string = FODEM_COLORS.textPrimary) => {
+  if (Platform.OS === 'web') {
+    return {
+      boxShadow: `0 4px 12px ${color}30`, // 30 = 18% opacity
+    };
+  } else {
+    return {
+      shadowColor: color,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.2,
+      shadowRadius: 12,
+      elevation: 5,
+    };
+  }
 }; 
