@@ -30,6 +30,7 @@ export const Icon: React.FC<IconProps> = ({
     // Hogares
     household: '🏠',
     members: '👥',
+    users: '👥',
     invite: '📨',
     join: '🔗',
     
@@ -69,6 +70,9 @@ export const Icon: React.FC<IconProps> = ({
     sort: '↕️',
     calendar: '📅',
     notification: '🔔',
+    clock: '⏰',
+    invitation: '📨',
+    dropdown: '▼',
   };
 
   const icon = iconMap[name] || '❓';

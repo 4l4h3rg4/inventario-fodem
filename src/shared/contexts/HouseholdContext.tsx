@@ -6,7 +6,8 @@ import { HouseholdService } from '../services/householdService';
 export interface Household {
   id: string;
   name: string;
-  icon?: string;
+  description?: string; // Campo que contiene el icono
+  icon?: string; // Campo alternativo para compatibilidad
   created_at: string;
   updated_at: string;
 }

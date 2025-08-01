@@ -36,10 +36,10 @@ export default function InventoryScreen() {
   const [showCustomPurchaseInput, setShowCustomPurchaseInput] = useState(false);
 
   useEffect(() => {
-    if (currentHousehold) {
+    if (currentHousehold && !householdsLoading) {
       loadProducts();
     }
-  }, [currentHousehold]);
+  }, [currentHousehold, householdsLoading]);
 
   // El contexto ya maneja la carga de hogares automáticamente
 

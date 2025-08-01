@@ -9,7 +9,7 @@ export const HOUSEHOLD_ICONS = [
 export interface Household {
   id: string;
   name: string;
-  description?: string;
+  description?: string; // Campo que contiene el icono
   created_by: string;
   created_at: string;
   updated_at: string;
@@ -54,7 +54,14 @@ export class HouseholdService {
       }
 
       const households = data?.map(item => item.households).filter(Boolean).flat() || [];
-      return { data: households as Household[], error: null };
+      
+      // Mapear el campo description como icon para compatibilidad
+      const mappedHouseholds = households.map(household => ({
+        ...household,
+        icon: household.description // Usar description como icon
+      }));
+      
+      return { data: mappedHouseholds as Household[], error: null };
     } catch (error) {
       return { data: null, error: 'Error de conexión' };
     }
@@ -153,6 +160,82 @@ export class HouseholdService {
       return { data: invitation.households as Household, error: null };
     } catch (error) {
       return { data: null, error: 'Error de conexión' };
+    }
+  }
+
+  static async deleteHousehold(householdId: string): Promise<{ success: boolean; error: string | null }> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        return { success: false, error: 'Usuario no autenticado' };
+      }
+
+      // Verificar que el usuario sea propietario del hogar
+      const { data: member, error: memberError } = await supabase
+        .from('household_members')
+        .select('role')
+        .eq('household_id', householdId)
+        .eq('user_id', user.id)
+        .single();
+
+      if (memberError || !member || member.role !== 'owner') {
+        return { success: false, error: 'Solo el propietario puede eliminar el hogar' };
+      }
+
+      // Eliminar el hogar (esto eliminará automáticamente los miembros, productos, etc. por las foreign keys)
+      const { error: deleteError } = await supabase
+        .from('households')
+        .delete()
+        .eq('id', householdId);
+
+      if (deleteError) {
+        return { success: false, error: 'Error al eliminar el hogar' };
+      }
+
+      return { success: true, error: null };
+    } catch (error) {
+      return { success: false, error: 'Error de conexión' };
+    }
+  }
+
+  static async leaveHousehold(householdId: string): Promise<{ success: boolean; error: string | null }> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        return { success: false, error: 'Usuario no autenticado' };
+      }
+
+      // Verificar que el usuario sea miembro del hogar
+      const { data: member, error: memberError } = await supabase
+        .from('household_members')
+        .select('role')
+        .eq('household_id', householdId)
+        .eq('user_id', user.id)
+        .single();
+
+      if (memberError || !member) {
+        return { success: false, error: 'No eres miembro de este hogar' };
+      }
+
+      // Si es el propietario, no puede salir (debe eliminar el hogar)
+      if (member.role === 'owner') {
+        return { success: false, error: 'El propietario no puede salir del hogar. Debe eliminarlo.' };
+      }
+
+      // Remover al usuario del hogar
+      const { error: leaveError } = await supabase
+        .from('household_members')
+        .delete()
+        .eq('household_id', householdId)
+        .eq('user_id', user.id);
+
+      if (leaveError) {
+        return { success: false, error: 'Error al salir del hogar' };
+      }
+
+      return { success: true, error: null };
+    } catch (error) {
+      return { success: false, error: 'Error de conexión' };
     }
   }
 } 

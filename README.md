@@ -1,126 +1,203 @@
-# Mi Despensa - FODEM PROJECT
+# Inventario FODEM 🏠
 
-Aplicación híbrida para gestión de inventario que funciona en **móvil (iOS/Android)** y **web**, con sincronización en tiempo real y gestión de hogares colaborativos.
+Una aplicación de gestión de inventario para hogares, desarrollada con React Native, Expo y Supabase.
 
-## 🎨 Branding FODEM PROJECT
+## 🚀 Características
 
-Esta aplicación utiliza el branding de **FODEM PROJECT** con una paleta de colores inspirada en el logo:
-- **Azul grisáceo claro** (#B8C5D1) - Color principal
-- **Beige claro** (#E8D5C4) - Color secundario
-- **Diseño moderno y orgánico** - Reflejando la identidad visual de FODEM
+- **Autenticación de usuarios** con Supabase Auth
+- **Gestión de hogares** - Crear, unirse y administrar hogares
+- **Inventario de productos** - Agregar, editar y eliminar productos
+- **Control de stock** - Seguimiento de cantidades mínimas e ideales
+- **Lista de compras** - Generación automática basada en stock bajo
+- **Sistema de invitaciones** - Códigos de invitación para unirse a hogares
+- **Roles de usuario** - Propietario, administrador y miembro
+- **Interfaz responsive** - Funciona en móvil y web
 
-## 🚀 Tecnologías
+## 📋 Requisitos Previos
 
-### Frontend Híbrido
-- **React Native + Expo**: Base para móvil
-- **React Native Web**: Compatibilidad web
-- **Expo Router**: Navegación universal
-- **Tamagui**: UI library híbrida
-- **TypeScript**: Tipado estático
-
-### Backend
-- **Supabase**: Base de datos PostgreSQL, autenticación, storage, real-time
-
-### Estilos
-- **Tailwind CSS**: Para web con colores FODEM
-- **React Native Styles**: Para móvil con colores FODEM
-- **Tamagui**: Componentes híbridos
-
-## 📱 Funcionalidades
-
-- ✅ **Inventario de productos** con control de stock
-- ✅ **Gestión de hogares colaborativos** con roles y permisos
-- ✅ **Sistema de invitaciones** por códigos
-- ✅ **Lista de compras inteligente** con priorización
-- ✅ **Historial de movimientos** automático
-- ✅ **Escaneo de códigos de barras**
-- ✅ **Notificaciones de stock bajo**
-- ✅ **Sincronización en tiempo real**
-- ✅ **Funciona en móvil y web**
+- Node.js (versión 18 o superior)
+- npm o yarn
+- Expo CLI (`npm install -g @expo/cli`)
+- Cuenta de Supabase (gratuita)
 
 ## 🛠️ Instalación
 
+1. **Clonar el repositorio**
+   ```bash
+   git clone <tu-repositorio>
+   cd inventario-fodem
+   ```
+
+2. **Instalar dependencias**
+   ```bash
+   npm install
+   ```
+
+3. **Configurar variables de entorno**
+   ```bash
+   # Copiar el archivo de ejemplo
+   cp env.example .env
+   
+   # Editar .env con tus credenciales de Supabase
+   EXPO_PUBLIC_SUPABASE_URL=https://tu-proyecto.supabase.co
+   EXPO_PUBLIC_SUPABASE_ANON_KEY=tu-clave-anonima
+   ```
+
+4. **Configurar Supabase**
+   - Ve a tu proyecto de Supabase
+   - En Settings > API, copia la URL y la anon key
+   - Pégala en tu archivo `.env`
+
+## 🗄️ Configuración de la Base de Datos
+
+### Tablas Requeridas
+
+El proyecto requiere las siguientes tablas en Supabase:
+
+- `households` - Información de hogares
+- `household_members` - Miembros de cada hogar
+- `household_invitations` - Invitaciones para unirse a hogares
+- `products` - Productos del inventario
+- `stock_history` - Historial de cambios de stock
+- `user_profiles` - Perfiles de usuario
+
+### Políticas RLS (Row Level Security)
+
+Todas las tablas deben tener RLS habilitado con políticas apropiadas para seguridad.
+
+### Funciones de Base de Datos
+
+El proyecto utiliza varias funciones SQL para:
+- Creación automática de perfiles de usuario
+- Actualización de timestamps
+- Gestión de invitaciones
+- Cálculo de productos con stock bajo
+
+## 🚀 Ejecutar el Proyecto
+
+### Desarrollo Local
+
 ```bash
-# Instalar dependencias
-npm install
+# Iniciar el servidor de desarrollo
+npm start
 
-# Ejecutar en móvil
-npm run android
-npm run ios
-
-# Ejecutar en web
+# Para web
 npm run web
+
+# Para Android
+npm run android
+
+# Para iOS
+npm run ios
 ```
 
-## 🏗️ Arquitectura
+### Despliegue
 
-```
-src/
-├── app/                    # Expo Router (navegación)
-├── core/                   # Reglas de negocio
-├── data/                   # Capa de datos
-├── presentation/           # UI y componentes
-└── shared/                 # Utilidades
-    ├── constants/
-    │   └── colors.ts       # Colores FODEM
-    ├── utils/
-    └── types/
+#### 1. Despliegue Web (Vercel/Netlify)
+
+```bash
+# Construir para web
+npm run web
+
+# El directorio web-build/ estará listo para desplegar
 ```
 
-## 🔧 Configuración
+#### 2. Despliegue Móvil (EAS Build)
 
-### Supabase
-1. Crear proyecto en Supabase
-2. Configurar variables de entorno
-3. Ejecutar migraciones
+```bash
+# Instalar EAS CLI
+npm install -g @expo/eas-cli
 
-### Variables de Entorno
-```env
-EXPO_PUBLIC_SUPABASE_URL=tu_url
-EXPO_PUBLIC_SUPABASE_ANON_KEY=tu_key
+# Configurar EAS
+eas build:configure
+
+# Construir para Android
+eas build --platform android
+
+# Construir para iOS
+eas build --platform ios
 ```
 
-## 📦 Scripts Disponibles
+#### 3. Despliegue en Expo Go
 
-- `npm start`: Iniciar servidor de desarrollo
-- `npm run android`: Ejecutar en Android
-- `npm run ios`: Ejecutar en iOS
-- `npm run web`: Ejecutar en web
-- `npm run build`: Construir para producción
-
-## 🎯 Características Híbridas
-
-- **Un solo código**: Funciona en móvil y web
-- **Navegación universal**: Expo Router
-- **UI adaptativa**: Se adapta a cada plataforma
-- **Estilos híbridos**: Tailwind + React Native con colores FODEM
-- **Base de datos única**: Supabase
-
-## 🚨 Solución al Problema de Navegación
-
-La aplicación usa **Expo Router** con configuración de modales que evita el problema de cerrar la app en lugar del modal:
-
-```typescript
-// Configuración correcta de modales
-<Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+```bash
+# Publicar en Expo
+expo publish
 ```
 
-## 🎨 Paleta de Colores FODEM
+## 🔧 Configuración de Producción
 
-```typescript
-// Colores principales del logo
-primary: '#B8C5D1'    // Azul grisáceo claro
-secondary: '#E8D5C4'  // Beige claro
+### Variables de Entorno de Producción
 
-// Colores de texto
-textPrimary: '#2C3E50'   // Negro suave
-textSecondary: '#7F8C8D' // Gris
+Asegúrate de configurar las variables de entorno en tu plataforma de despliegue:
 
-// Colores de fondo
-background: '#F8F9FA' // Fondo principal
-surface: '#FFFFFF'    // Superficies
+- `EXPO_PUBLIC_SUPABASE_URL`
+- `EXPO_PUBLIC_SUPABASE_ANON_KEY`
+
+### Configuración de Supabase para Producción
+
+1. **Habilitar autenticación por email**
+2. **Configurar dominios autorizados** en Authentication > Settings
+3. **Revisar políticas RLS** para seguridad
+4. **Configurar backups** automáticos
+
+## 🐛 Solución de Problemas
+
+### Error: Variables de entorno no configuradas
+- Verifica que el archivo `.env` existe y tiene las variables correctas
+- Reinicia el servidor de desarrollo después de cambiar `.env`
+
+### Error: No se puede conectar a Supabase
+- Verifica que la URL y clave anónima sean correctas
+- Asegúrate de que el proyecto de Supabase esté activo
+
+### Error: Tablas no encontradas
+- Ejecuta las migraciones de base de datos en Supabase
+- Verifica que las políticas RLS estén configuradas
+
+## 📱 Estructura del Proyecto
+
 ```
+inventario-fodem/
+├── app/                    # Páginas de Expo Router
+│   ├── (tabs)/            # Navegación por tabs
+│   ├── auth.tsx           # Página de autenticación
+│   └── welcome.tsx        # Página de bienvenida
+├── src/
+│   ├── shared/            # Código compartido
+│   │   ├── config/        # Configuración (Supabase)
+│   │   ├── contexts/      # Contextos de React
+│   │   ├── services/      # Servicios de API
+│   │   └── utils/         # Utilidades
+│   └── presentation/      # Componentes de UI
+├── assets/                # Imágenes y recursos
+└── docs/                  # Documentación
+```
+
+## 🤝 Contribuir
+
+1. Fork el proyecto
+2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
+3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
+4. Push a la rama (`git push origin feature/AmazingFeature`)
+5. Abre un Pull Request
 
 ## 📄 Licencia
 
-MIT - FODEM PROJECT 
+Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más detalles.
+
+## 🆘 Soporte
+
+Si tienes problemas o preguntas:
+
+1. Revisa la documentación de [Expo](https://docs.expo.dev/)
+2. Consulta la documentación de [Supabase](https://supabase.com/docs)
+3. Abre un issue en este repositorio
+
+## 🎯 Roadmap
+
+- [ ] Notificaciones push para stock bajo
+- [ ] Escaneo de códigos de barras
+- [ ] Exportación de inventario
+- [ ] Estadísticas de consumo
+- [ ] Integración con servicios de delivery 

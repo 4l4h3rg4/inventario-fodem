@@ -3,7 +3,6 @@ import { Session, User } from '@supabase/supabase-js';
 import { router, usePathname } from 'expo-router';
 import { supabase } from '../config/supabase';
 import { HouseholdService } from '../services/householdService';
-import { HouseholdProvider } from './HouseholdContext';
 
 interface AuthContextType {
   user: User | null;
@@ -156,9 +155,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   return (
     <AuthContext.Provider value={value}>
-      <HouseholdProvider>
-        {children}
-      </HouseholdProvider>
+      {children}
     </AuthContext.Provider>
   );
 }; 
