@@ -17,6 +17,8 @@ import { Icon } from '../src/presentation/components/Icon';
 import { SuccessModal } from '../src/presentation/components/SuccessModal';
 import { useAuth } from '../src/shared/contexts/AuthContext';
 import { ErrorAlert } from '../src/presentation/components/ErrorAlert';
+import { ConnectionStatus } from '../src/presentation/components/ConnectionStatus';
+import { HouseholdService } from '../src/shared/services/householdService';
 
 export default function AuthScreen() {
   const params = useLocalSearchParams();
@@ -31,6 +33,7 @@ export default function AuthScreen() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showErrorAlert, setShowErrorAlert] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [showDebug, setShowDebug] = useState(false);
   
   const { signIn, signUp } = useAuth();
 
@@ -75,24 +78,33 @@ export default function AuthScreen() {
     }
 
     setLoading(true);
+    console.log('🚀 Iniciando proceso de autenticación...');
     
     try {
       let result;
       
       if (isLogin) {
+        console.log('🔐 Procesando inicio de sesión...');
         result = await signIn(email, password);
       } else {
+        console.log('📝 Procesando registro...');
         result = await signUp(email, password, fullName);
       }
 
-      if (result.error) {
-        setErrorMessage(result.error);
-        setShowErrorAlert(true);
-      } else if (result.success && !isLogin) {
-        setShowSuccessModal(true);
-      }
-      // Para login exitoso, la navegación se maneja automáticamente en AuthContext
+             if (result.error) {
+         console.error('❌ Error en autenticación:', result.error);
+         setErrorMessage(result.error);
+         setShowErrorAlert(true);
+       } else if (!isLogin) {
+         console.log('✅ Registro exitoso');
+         setShowSuccessModal(true);
+       } else {
+         console.log('✅ Inicio de sesión exitoso');
+         // La navegación se maneja automáticamente por el AuthContext
+         // No necesitamos navegación manual aquí para evitar conflictos
+       }
     } catch (error: any) {
+      console.error('❌ Error inesperado:', error);
       setErrorMessage('Ocurrió un error inesperado. Por favor intenta nuevamente.');
       setShowErrorAlert(true);
     } finally {
@@ -560,6 +572,33 @@ export default function AuthScreen() {
                 Después de crear tu cuenta, revisa tu email para confirmar tu dirección antes de poder iniciar sesión.
               </Text>
             </View>
+          )}
+
+          {/* Debug Panel */}
+          <View style={{
+            alignItems: 'center',
+            marginBottom: 20,
+          }}>
+            <TouchableOpacity 
+              onPress={() => setShowDebug(!showDebug)}
+              style={{
+                paddingVertical: 8,
+                paddingHorizontal: 16,
+                borderRadius: 8,
+                backgroundColor: FODEM_COLORS.border,
+              }}
+            >
+              <Text style={{
+                fontSize: 14,
+                color: FODEM_COLORS.textSecondary,
+              }}>
+                {showDebug ? 'Ocultar Debug' : 'Mostrar Debug'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {showDebug && (
+            <ConnectionStatus visible={true} />
           )}
         </View>
       </ScrollView>

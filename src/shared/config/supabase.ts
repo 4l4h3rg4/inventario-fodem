@@ -1,32 +1,37 @@
 import { createClient } from '@supabase/supabase-js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { SUPABASE_URL, SUPABASE_ANON_KEY, AUTH_SUPABASE_URL, AUTH_SUPABASE_ANON_KEY } from '@env';
+import { EXPO_PUBLIC_SUPABASE_URL, EXPO_PUBLIC_SUPABASE_ANON_KEY } from '@env';
 
-// Cliente para la base de datos de autenticación central (para auth)
-export const authSupabase = createClient(AUTH_SUPABASE_URL, AUTH_SUPABASE_ANON_KEY, {
-  auth: {
-    storage: AsyncStorage,
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: false,
-    storageKey: 'auth-supabase-session', // Clave única para auth
-  },
-});
+// Verificar que las variables estén definidas
+if (!EXPO_PUBLIC_SUPABASE_URL || !EXPO_PUBLIC_SUPABASE_ANON_KEY) {
+  console.error('❌ ERROR: Variables de entorno no configuradas');
+  console.error('EXPO_PUBLIC_SUPABASE_URL:', EXPO_PUBLIC_SUPABASE_URL ? 'Definida' : 'NO DEFINIDA');
+  console.error('EXPO_PUBLIC_SUPABASE_ANON_KEY:', EXPO_PUBLIC_SUPABASE_ANON_KEY ? 'Definida' : 'NO DEFINIDA');
+  console.warn('⚠️ Usando configuración por defecto. Verifica tu archivo .env');
+  console.warn('📝 Crea un archivo .env en la raíz del proyecto con:');
+  console.warn('   EXPO_PUBLIC_SUPABASE_URL=tu_url_de_supabase');
+  console.warn('   EXPO_PUBLIC_SUPABASE_ANON_KEY=tu_clave_anonima');
+}
 
-// Cliente para la base de datos de Mi Despensa (para datos del inventario)
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: {
-    storage: AsyncStorage,
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: false,
-    storageKey: 'despensa-supabase-session', // Clave única para Mi Despensa
-  },
-});
+console.log('✅ Configurando Supabase con variables de entorno');
+console.log('URL:', EXPO_PUBLIC_SUPABASE_URL || 'NO CONFIGURADA');
+console.log('Clave configurada:', EXPO_PUBLIC_SUPABASE_ANON_KEY ? 'SÍ' : 'NO');
 
+// Cliente único para la base de datos de Mi Despensa (con autenticación integrada)
+export const supabase = createClient(
+  EXPO_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
+  EXPO_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key',
+  {
+    auth: {
+      storage: AsyncStorage,
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: false,
+    },
+  }
+);
 
-
-// Tipos para la base de datos de Mi Despensa (mantener los existentes)
+// Tipos para la base de datos de Mi Despensa
 export interface Database {
   public: {
     Tables: {

@@ -3,10 +3,14 @@ import { useRouter } from 'expo-router';
 import { FODEM_COLORS } from '../src/shared/constants/colors';
 import { FodemLogo } from '../src/presentation/components/FodemLogo';
 import { useAuth } from '../src/shared/contexts/AuthContext';
+import { useAuthNavigation } from '../src/shared/hooks/useAuthNavigation';
 
 export default function HomePage() {
   const { user, loading } = useAuth();
   const router = useRouter();
+
+  // Usar el hook de navegación
+  useAuthNavigation();
 
   if (loading) {
     return (
@@ -38,16 +42,13 @@ export default function HomePage() {
     );
   }
 
-  // Si está autenticado, mostrar botón para ir a la app
+  // Si está autenticado, mostrar loading mientras se verifica la navegación
   return (
     <View style={{ flex: 1, backgroundColor: FODEM_COLORS.background, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
       <FodemLogo size="large" showSubtitle={true} />
-      <Text style={{ fontSize: 18, color: FODEM_COLORS.textSecondary, marginTop: 20, marginBottom: 40, textAlign: 'center' }}>
-        Bienvenido de vuelta
+      <Text style={{ fontSize: 18, color: FODEM_COLORS.textSecondary, marginTop: 20, textAlign: 'center' }}>
+        Verificando configuración...
       </Text>
-      <TouchableOpacity onPress={() => router.replace('/(tabs)')} style={{ backgroundColor: FODEM_COLORS.primary, paddingHorizontal: 32, paddingVertical: 16, borderRadius: 12, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        <Text style={{ color: FODEM_COLORS.textLight, fontSize: 18, fontWeight: '600' }}>Continuar</Text>
-      </TouchableOpacity>
     </View>
   );
 } 
