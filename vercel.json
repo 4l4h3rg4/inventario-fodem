@@ -3,11 +3,6 @@
   "outputDirectory": "dist",
   "installCommand": "npm install",
   "devCommand": "npx expo start --web",
-  "functions": {
-    "app/**/*.tsx": {
-      "runtime": "nodejs18"
-    }
-  },
   "rewrites": [
     {
       "source": "/(.*)",
