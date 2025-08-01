@@ -5,6 +5,6 @@ import { configureConsoleWarnings } from './src/shared/config/consoleConfig';
 configureConsoleWarnings();
 
 export default function App() {
-  const ctx = require.context('./app');
+  const ctx = (require as any).context('./app');
   return <ExpoRoot context={ctx} />;
 } 

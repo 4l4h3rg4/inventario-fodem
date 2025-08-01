@@ -67,12 +67,13 @@ export const ErrorAlert: React.FC<ErrorAlertProps> = ({
       }
     ]}>
       <View style={styles.content}>
-        <Icon 
-          name={getIconName()} 
-          size={20} 
-          color={getTextColor()} 
-          style={styles.icon}
-        />
+        <View style={styles.icon}>
+          <Icon 
+            name={getIconName()} 
+            size={20} 
+            color={getTextColor()} 
+          />
+        </View>
         <Text style={[styles.message, { color: getTextColor() }]}>
           {message}
         </Text>

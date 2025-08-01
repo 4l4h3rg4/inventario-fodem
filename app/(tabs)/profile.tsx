@@ -101,6 +101,13 @@ export default function ProfileScreen() {
     }
   }, [currentInvitation]);
 
+  // Recargar datos cuando cambie el hogar seleccionado
+  useEffect(() => {
+    if (selectedHousehold && !membersLoading) {
+      loadHouseholdDetails();
+    }
+  }, [selectedHousehold]);
+
   // Recargar datos cuando la página vuelva a estar en foco
   useFocusEffect(
     useCallback(() => {
@@ -297,57 +304,22 @@ export default function ProfileScreen() {
     }
 
     try {
-      // Buscar la invitación por código
-      const { data: invitation, error: invitationError } = await supabase
-        .from('household_invitations')
-        .select('*')
-        .eq('invitation_code', joinCode.trim().toUpperCase())
-        .is('accepted_at', null)
-        .gt('expires_at', new Date().toISOString())
-        .single();
+      // Usar el servicio corregido
+      const { data, error } = await HouseholdService.joinHousehold({
+        invitation_code: joinCode.trim().toUpperCase(),
+      });
 
-      if (invitationError || !invitation) {
-        Alert.alert('Error', 'Código de invitación inválido o expirado');
+      if (error) {
+        Alert.alert('Error', error);
         return;
       }
 
-      // Verificar que el usuario no esté ya en el hogar
-      const { data: existingMember } = await supabase
-        .from('household_members')
-        .select('*')
-        .eq('household_id', invitation.household_id)
-        .eq('user_id', user?.id)
-        .single();
-
-      if (existingMember) {
-        Alert.alert('Error', 'Ya eres miembro de este hogar');
-        return;
+      if (data) {
+        Alert.alert('Éxito', 'Te has unido al hogar correctamente');
+        setShowJoinCodeModal(false);
+        setJoinCode('');
+        refreshHouseholds(); // Recargar hogares del usuario
       }
-
-      // Unirse al hogar
-      const { error: joinError } = await supabase
-        .from('household_members')
-        .insert({
-          household_id: invitation.household_id,
-          user_id: user?.id,
-          role: invitation.role,
-        });
-
-      if (joinError) {
-        Alert.alert('Error', 'No se pudo unir al hogar');
-        return;
-      }
-
-      // Marcar la invitación como aceptada
-      await supabase
-        .from('household_invitations')
-        .update({ accepted_at: new Date().toISOString() })
-        .eq('id', invitation.id);
-
-      Alert.alert('Éxito', 'Te has unido al hogar correctamente');
-      setShowJoinCodeModal(false);
-      setJoinCode('');
-      refreshHouseholds(); // Recargar hogares del usuario
     } catch (error) {
       console.error('Error joining household:', error);
       Alert.alert('Error', 'No se pudo unir al hogar');
@@ -487,16 +459,16 @@ export default function ProfileScreen() {
     if (!selectedHousehold) return;
     
     setDeleteLoading(true);
-    try {
-      const { error } = await HouseholdService.deleteHousehold(selectedHousehold.id);
-      if (error) {
-        Alert.alert('Error', error);
+            try {
+              const { error } = await HouseholdService.deleteHousehold(selectedHousehold.id);
+              if (error) {
+                Alert.alert('Error', error);
         setDeleteLoading(false);
         setShowDeleteModal(false);
-        return;
-      }
-      
-      Alert.alert('Éxito', 'Hogar eliminado correctamente');
+                return;
+              }
+              
+              Alert.alert('Éxito', 'Hogar eliminado correctamente');
       
       // Limpiar estado local inmediatamente
       setSelectedHousehold(null);
@@ -507,11 +479,11 @@ export default function ProfileScreen() {
       await refreshHouseholds();
       
       setShowDeleteModal(false);
-    } catch (error) {
-      Alert.alert('Error', 'No se pudo eliminar el hogar');
+            } catch (error) {
+              Alert.alert('Error', 'No se pudo eliminar el hogar');
     } finally {
       setDeleteLoading(false);
-    }
+            }
   };
 
   const handleLeaveHousehold = () => {
@@ -522,16 +494,16 @@ export default function ProfileScreen() {
     if (!selectedHousehold) return;
     
     setLeaveLoading(true);
-    try {
-      const { error } = await HouseholdService.leaveHousehold(selectedHousehold.id);
-      if (error) {
-        Alert.alert('Error', error);
+            try {
+              const { error } = await HouseholdService.leaveHousehold(selectedHousehold.id);
+              if (error) {
+                Alert.alert('Error', error);
         setLeaveLoading(false);
         setShowLeaveModal(false);
-        return;
-      }
-      
-      Alert.alert('Éxito', 'Has salido del hogar correctamente');
+                return;
+              }
+              
+              Alert.alert('Éxito', 'Has salido del hogar correctamente');
       
       // Limpiar estado local inmediatamente
       setSelectedHousehold(null);
@@ -542,11 +514,11 @@ export default function ProfileScreen() {
       await refreshHouseholds();
       
       setShowLeaveModal(false);
-    } catch (error) {
-      Alert.alert('Error', 'No se pudo salir del hogar');
+            } catch (error) {
+              Alert.alert('Error', 'No se pudo salir del hogar');
     } finally {
       setLeaveLoading(false);
-    }
+            }
   };
 
   if (householdsLoading) {
@@ -699,7 +671,10 @@ export default function ProfileScreen() {
                       borderWidth: 1,
                       borderColor: FODEM_COLORS.border,
                     }}
-                    onPress={() => setSelectedHousehold(household)}
+                    onPress={() => {
+                      setSelectedHousehold(household);
+                      setCurrentHousehold(household); // Actualizar contexto global
+                    }}
                   >
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                       <Text style={{ fontSize: 16 }}>{household.description}</Text>
@@ -943,23 +918,23 @@ export default function ProfileScreen() {
                         {membersLoading ? 'Actualizando...' : 'Actualizar'}
                       </Text>
                     </TouchableOpacity>
-                    <TouchableOpacity
-                      style={{
-                        backgroundColor: FODEM_COLORS.secondary,
-                        paddingHorizontal: 12,
-                        paddingVertical: 6,
-                        borderRadius: 8,
-                      }}
+                  <TouchableOpacity
+                    style={{
+                      backgroundColor: FODEM_COLORS.secondary,
+                      paddingHorizontal: 12,
+                      paddingVertical: 6,
+                      borderRadius: 8,
+                    }}
                       onPress={generateInvitationCode}
-                    >
-                      <Text style={{
-                        color: FODEM_COLORS.textPrimary,
-                        fontSize: 14,
-                        fontWeight: '600',
-                      }}>
+                  >
+                    <Text style={{
+                      color: FODEM_COLORS.textPrimary,
+                      fontSize: 14,
+                      fontWeight: '600',
+                    }}>
                         Generar Código
-                      </Text>
-                    </TouchableOpacity>
+                    </Text>
+                  </TouchableOpacity>
                   </View>
                 </View>
 
@@ -989,13 +964,13 @@ export default function ProfileScreen() {
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                           <View style={{ flex: 1 }}>
                             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                              <Text style={{
-                                fontSize: 14,
-                                fontWeight: '500',
-                                color: FODEM_COLORS.textPrimary,
-                              }}>
+                          <Text style={{
+                            fontSize: 14,
+                            fontWeight: '500',
+                            color: FODEM_COLORS.textPrimary,
+                          }}>
                                 {getMemberDisplayName(member)}
-                              </Text>
+                          </Text>
                               {member.user_id === user?.id && (
                                 <View style={{
                                   backgroundColor: FODEM_COLORS.primary,
@@ -1056,57 +1031,57 @@ export default function ProfileScreen() {
 
                         {/* Invitaciones Activas - Solo para debugging en desarrollo */}
           {__DEV__ && householdInvitations.length > 0 && (
-            <View style={{
-              backgroundColor: FODEM_COLORS.surface,
-              borderRadius: 16,
-              padding: 20,
-              ...getShadowStyle(),
-            }}>
-              <View style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                marginBottom: 16,
-              }}>
-                <Icon name="invitation" size={20} color={FODEM_COLORS.textPrimary} />
-                <Text style={{
-                  fontSize: 18,
-                  fontWeight: '600',
-                  color: FODEM_COLORS.textPrimary,
-                  marginLeft: 8,
+                <View style={{
+                  backgroundColor: FODEM_COLORS.surface,
+                  borderRadius: 16,
+                  padding: 20,
+                  ...getShadowStyle(),
                 }}>
-                  Invitaciones Activas ({householdInvitations.length}) [DEBUG]
-                </Text>
-              </View>
-
-              <View style={{ gap: 8 }}>
-                {householdInvitations.map((invitation) => (
-                  <View key={invitation.id} style={{
-                    backgroundColor: FODEM_COLORS.background,
-                    padding: 12,
-                    borderRadius: 8,
-                    borderWidth: 1,
-                    borderColor: FODEM_COLORS.border,
+                  <View style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    marginBottom: 16,
                   }}>
-                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Text style={{
-                        fontSize: 14,
-                        fontWeight: '600',
-                        color: FODEM_COLORS.textPrimary,
-                      }}>
-                        Código: {invitation.invitation_code}
-                      </Text>
-                      <Text style={{
-                        fontSize: 12,
-                        color: FODEM_COLORS.textSecondary,
-                      }}>
-                        Expira: {new Date(invitation.expires_at).toLocaleDateString()}
-                      </Text>
-                    </View>
+                    <Icon name="invitation" size={20} color={FODEM_COLORS.textPrimary} />
+                    <Text style={{
+                      fontSize: 18,
+                      fontWeight: '600',
+                      color: FODEM_COLORS.textPrimary,
+                      marginLeft: 8,
+                    }}>
+                  Invitaciones Activas ({householdInvitations.length}) [DEBUG]
+                    </Text>
                   </View>
-                ))}
-              </View>
-            </View>
-          )}
+
+                  <View style={{ gap: 8 }}>
+                    {householdInvitations.map((invitation) => (
+                      <View key={invitation.id} style={{
+                        backgroundColor: FODEM_COLORS.background,
+                        padding: 12,
+                        borderRadius: 8,
+                        borderWidth: 1,
+                        borderColor: FODEM_COLORS.border,
+                      }}>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <Text style={{
+                            fontSize: 14,
+                            fontWeight: '600',
+                            color: FODEM_COLORS.textPrimary,
+                          }}>
+                            Código: {invitation.invitation_code}
+                          </Text>
+                          <Text style={{
+                            fontSize: 12,
+                            color: FODEM_COLORS.textSecondary,
+                          }}>
+                            Expira: {new Date(invitation.expires_at).toLocaleDateString()}
+                          </Text>
+                        </View>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              )}
             </>
           )}
 

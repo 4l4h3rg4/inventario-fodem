@@ -32,31 +32,33 @@ export class HouseholdService {
         return { data: null, error: 'Usuario no autenticado' };
       }
 
-      const { data, error } = await supabase
+      // Paso 1: Obtener membresías del usuario
+      const { data: memberships, error: membershipsError } = await supabase
         .from('household_members')
-        .select(`
-          household_id,
-          role,
-          joined_at,
-          households (
-            id,
-            name,
-            description,
-            created_by,
-            created_at,
-            updated_at
-          )
-        `)
+        .select('household_id, role, joined_at')
         .eq('user_id', user.id);
 
-      if (error) {
+      if (membershipsError) {
         return { data: null, error: 'Error al obtener hogares' };
       }
 
-      const households = data?.map(item => item.households).filter(Boolean).flat() || [];
-      
+      if (!memberships || memberships.length === 0) {
+        return { data: [], error: null };
+      }
+
+      // Paso 2: Obtener información de los hogares
+      const householdIds = memberships.map(m => m.household_id);
+      const { data: householdsData, error: householdsError } = await supabase
+        .from('households')
+        .select('id, name, description, created_by, created_at, updated_at')
+        .in('id', householdIds);
+
+      if (householdsError) {
+        return { data: null, error: 'Error al obtener información de hogares' };
+      }
+
       // Mapear el campo description como icon para compatibilidad
-      const mappedHouseholds = households.map(household => ({
+      const mappedHouseholds = (householdsData || []).map(household => ({
         ...household,
         icon: household.description // Usar description como icon
       }));
@@ -118,19 +120,9 @@ export class HouseholdService {
       // Buscar la invitación
       const { data: invitation, error: invitationError } = await supabase
         .from('household_invitations')
-        .select(`
-          *,
-          households (
-            id,
-            name,
-            description,
-            created_by,
-            created_at,
-            updated_at
-          )
-        `)
+        .select('*')
         .eq('invitation_code', joinData.invitation_code)
-        .eq('accepted_at', null)
+        .is('accepted_at', null)
         .gt('expires_at', new Date().toISOString())
         .single();
 
@@ -157,7 +149,18 @@ export class HouseholdService {
         .update({ accepted_at: new Date().toISOString() })
         .eq('id', invitation.id);
 
-      return { data: invitation.households as Household, error: null };
+      // Obtener los datos del hogar
+      const { data: household, error: householdError } = await supabase
+        .from('households')
+        .select('*')
+        .eq('id', invitation.household_id)
+        .single();
+
+      if (householdError || !household) {
+        return { data: null, error: 'Hogar no encontrado' };
+      }
+
+      return { data: household as Household, error: null };
     } catch (error) {
       return { data: null, error: 'Error de conexión' };
     }
