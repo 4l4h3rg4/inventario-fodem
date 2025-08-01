@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "inventario-fodem",
+    "name": "Inventario FODEM",
     "slug": "inventario-fodem",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -8,13 +8,15 @@
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "scheme": "inventario-fodem",
+    "description": "Aplicación de gestión de inventario para hogares",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.fodem.inventario"
     },
     "android": {
       "adaptiveIcon": {
@@ -22,10 +24,15 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.anonymous.inventariofodem"
+      "package": "com.fodem.inventario"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/logo_sin_fondo.png",
+      "name": "Inventario FODEM",
+      "description": "Aplicación de gestión de inventario para hogares",
+      "lang": "es",
+      "themeColor": "#ffffff",
+      "backgroundColor": "#ffffff"
     },
     "plugins": [
       "expo-secure-store",
