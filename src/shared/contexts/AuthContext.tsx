@@ -3,6 +3,7 @@ import { Session, User } from '@supabase/supabase-js';
 import { router, usePathname } from 'expo-router';
 import { supabase } from '../config/supabase';
 import { HouseholdService } from '../services/householdService';
+import { logger } from '../utils/logger';
 
 interface AuthContextType {
   user: User | null;
@@ -40,15 +41,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      console.log('🔄 Auth state changed:', _event, session?.user?.email);
+      logger.debug('🔄 Auth state changed:', _event, session?.user?.email);
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
 
       // Handle navigation after successful authentication
       if (session?.user && _event === 'SIGNED_IN' && !isNavigating) {
-        console.log('🚀 User signed in, checking navigation...');
-        console.log('📍 Current pathname:', pathname);
+        logger.debug('🚀 User signed in, checking navigation...');
+        logger.debug('📍 Current pathname:', pathname);
         setIsNavigating(true);
         
         // Solo navegar si estamos en la pantalla de auth o index
@@ -59,27 +60,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               const { data: households, error } = await HouseholdService.getUserHouseholds();
               
               if (error) {
-                console.error('❌ Error checking households:', error);
+                logger.error('❌ Error checking households:', error);
                 router.replace('/welcome');
                 return;
               }
 
               if (households && households.length > 0) {
-                console.log('🏠 User has households, navigating to tabs');
+                logger.debug('🏠 User has households, navigating to tabs');
                 router.replace('/(tabs)');
               } else {
-                console.log('🏠 User has no households, navigating to welcome');
+                logger.debug('🏠 User has no households, navigating to welcome');
                 router.replace('/welcome');
               }
             } catch (error) {
-              console.error('❌ Error in navigation check:', error);
+              logger.error('❌ Error in navigation check:', error);
               router.replace('/welcome');
             } finally {
               setIsNavigating(false);
             }
           }, 500); // Esperar 500ms antes de navegar
         } else {
-          console.log('📍 Already on correct page, no navigation needed');
+          logger.debug('📍 Already on correct page, no navigation needed');
           setIsNavigating(false);
         }
       }
@@ -90,7 +91,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async (email: string, password: string) => {
     try {
-      console.log('🔐 Intentando iniciar sesión con:', email);
+      logger.debug('🔐 Intentando iniciar sesión con:', email);
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -98,17 +99,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (error) {
-        console.error('❌ Error de autenticación:', error.message);
+        logger.error('❌ Error de autenticación:', error.message);
         return { error: error.message };
       }
 
       if (data.user) {
-        console.log('✅ Usuario autenticado exitosamente:', data.user.email);
+        logger.debug('✅ Usuario autenticado exitosamente:', data.user.email);
       }
 
       return {};
     } catch (error: any) {
-      console.error('❌ Error de conexión:', error);
+      logger.error('❌ Error de conexión:', error);
       return { error: 'Error de conexión. Verifica tu conexión a internet.' };
     }
   };
@@ -140,7 +141,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await supabase.auth.signOut();
       router.replace('/auth');
     } catch (error) {
-      console.error('Error signing out:', error);
+      logger.error('Error signing out:', error);
     }
   };
 

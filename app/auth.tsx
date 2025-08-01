@@ -12,6 +12,7 @@ import {
 import { router, useLocalSearchParams } from 'expo-router';
 import { FODEM_COLORS } from '../src/shared/constants/colors';
 import { getShadowStyle } from '../src/shared/utils/styles';
+import { logger } from '../src/shared/utils/logger';
 import { FodemLogo } from '../src/presentation/components/FodemLogo';
 import { Icon } from '../src/presentation/components/Icon';
 import { SuccessModal } from '../src/presentation/components/SuccessModal';
@@ -78,33 +79,33 @@ export default function AuthScreen() {
     }
 
     setLoading(true);
-    console.log('🚀 Iniciando proceso de autenticación...');
+    logger.debug('🚀 Iniciando proceso de autenticación...');
     
     try {
       let result;
       
       if (isLogin) {
-        console.log('🔐 Procesando inicio de sesión...');
+        logger.debug('🔐 Procesando inicio de sesión...');
         result = await signIn(email, password);
       } else {
-        console.log('📝 Procesando registro...');
+        logger.debug('📝 Procesando registro...');
         result = await signUp(email, password, fullName);
       }
 
              if (result.error) {
-         console.error('❌ Error en autenticación:', result.error);
+         logger.error('❌ Error en autenticación:', result.error);
          setErrorMessage(result.error);
          setShowErrorAlert(true);
        } else if (!isLogin) {
-         console.log('✅ Registro exitoso');
+         logger.debug('✅ Registro exitoso');
          setShowSuccessModal(true);
        } else {
-         console.log('✅ Inicio de sesión exitoso');
+         logger.debug('✅ Inicio de sesión exitoso');
          // La navegación se maneja automáticamente por el AuthContext
          // No necesitamos navegación manual aquí para evitar conflictos
        }
     } catch (error: any) {
-      console.error('❌ Error inesperado:', error);
+      logger.error('❌ Error inesperado:', error);
       setErrorMessage('Ocurrió un error inesperado. Por favor intenta nuevamente.');
       setShowErrorAlert(true);
     } finally {

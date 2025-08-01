@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 import { HouseholdService } from '../services/householdService';
+import { logger } from '../utils/logger';
 
 // Tipos
 export interface Household {
@@ -62,7 +63,7 @@ export const HouseholdProvider: React.FC<HouseholdProviderProps> = ({ children }
       const { data, error } = await HouseholdService.getUserHouseholds();
       
       if (error) {
-        console.error('Error loading households:', error);
+        logger.error('Error loading households:', error);
         setUserHouseholds([]);
         setCurrentHousehold(null);
         return;
@@ -86,7 +87,7 @@ export const HouseholdProvider: React.FC<HouseholdProviderProps> = ({ children }
         setCurrentHousehold(null);
       }
     } catch (error) {
-      console.error('Error loading households:', error);
+      logger.error('Error loading households:', error);
       setUserHouseholds([]);
       setCurrentHousehold(null);
     } finally {

@@ -10,6 +10,7 @@ import { useAuth } from '../../src/shared/contexts/AuthContext';
 import { useHousehold } from '../../src/shared/contexts/HouseholdContext';
 import { ProductService, Product, CreateProductData } from '../../src/shared/services/productService';
 
+import { logger } from '../../src/shared/utils/logger';
 export default function InventoryScreen() {
   const { user } = useAuth();
   const { 
@@ -51,13 +52,13 @@ export default function InventoryScreen() {
       const { data, error } = await ProductService.getHouseholdProducts(currentHousehold.id);
       
       if (error) {
-        console.error('Error loading products:', error);
+        logger.error('Error loading products:', error);
         return;
       }
 
       setProducts(data || []);
     } catch (error) {
-      console.error('Error loading products:', error);
+      logger.error('Error loading products:', error);
     } finally {
       setProductsLoading(false);
     }
@@ -95,7 +96,7 @@ export default function InventoryScreen() {
         Alert.alert('Éxito', 'Producto creado correctamente');
       }
     } catch (error) {
-      console.error('Error creating product:', error);
+      logger.error('Error creating product:', error);
       Alert.alert('Error', 'No se pudo crear el producto');
     }
   };
@@ -128,11 +129,11 @@ export default function InventoryScreen() {
       }
 
       // Si todo va bien, no necesitamos recargar productos
-      console.log('Stock actualizado exitosamente');
+      logger.debug('Stock actualizado exitosamente');
     } catch (error) {
       // Si hay error, revertir el cambio local
       setProducts(products);
-      console.error('Error updating stock:', error);
+      logger.error('Error updating stock:', error);
       Alert.alert('Error', 'No se pudo actualizar el stock');
     }
   };

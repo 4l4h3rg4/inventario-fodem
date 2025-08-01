@@ -30,18 +30,19 @@ export const configureConsoleWarnings = () => {
              'Could not find a relationship',
            ]);
 
-  // En desarrollo, también podemos configurar el nivel de logging
+  // Solo en desarrollo mostramos configuración
   if (__DEV__) {
-    console.log('🔧 Console warnings configured for development');
+    // Mensaje minimizado
   }
 };
 
 // Función para limpiar logs en producción
 export const cleanProductionLogs = () => {
   if (!__DEV__) {
-    // En producción, suprimir logs de desarrollo
+    // En producción, suprimir logs de desarrollo para mejor rendimiento
     console.log = () => {};
     console.warn = () => {};
     console.info = () => {};
+    console.debug = () => {};
   }
 }; 

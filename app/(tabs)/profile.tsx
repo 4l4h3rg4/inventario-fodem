@@ -12,6 +12,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { HouseholdService } from '../../src/shared/services/householdService';
 import { supabase } from '../../src/shared/config/supabase';
 
+import { logger } from '../../src/shared/utils/logger';
 interface HouseholdMember {
   id: string;
   user_id: string;
@@ -131,7 +132,7 @@ export default function ProfileScreen() {
 
     try {
       setMembersLoading(true);
-      console.log('Cargando detalles del hogar:', selectedHousehold.id);
+      logger.debug('Cargando detalles del hogar:', selectedHousehold.id);
       
       // Cargar miembros del hogar con información del perfil de usuario en una sola consulta
       const { data: membersData, error: membersError } = await supabase
@@ -146,10 +147,10 @@ export default function ProfileScreen() {
         .eq('household_id', selectedHousehold.id);
 
       if (!membersError && membersData) {
-        console.log('Miembros cargados:', membersData);
+        logger.debug('Miembros cargados:', membersData);
         setHouseholdMembers(membersData);
       } else if (membersError) {
-        console.error('Error cargando miembros:', membersError);
+        logger.error('Error cargando miembros:', membersError);
         // Fallback: cargar solo miembros básicos si falla el join
         const { data: basicMembersData, error: basicMembersError } = await supabase
           .from('household_members')
@@ -157,7 +158,7 @@ export default function ProfileScreen() {
           .eq('household_id', selectedHousehold.id);
         
         if (!basicMembersError && basicMembersData) {
-          console.log('Miembros básicos cargados:', basicMembersData);
+          logger.debug('Miembros básicos cargados:', basicMembersData);
           setHouseholdMembers(basicMembersData);
         }
       }
@@ -171,11 +172,11 @@ export default function ProfileScreen() {
         .gt('expires_at', new Date().toISOString());
 
       if (!invitationsError && invitationsData) {
-        console.log('Invitaciones cargadas:', invitationsData);
+        logger.debug('Invitaciones cargadas:', invitationsData);
         setHouseholdInvitations(invitationsData);
       }
     } catch (error) {
-      console.error('Error loading household details:', error);
+      logger.error('Error loading household details:', error);
     } finally {
       setMembersLoading(false);
     }
@@ -205,7 +206,7 @@ export default function ProfileScreen() {
         Alert.alert('Éxito', 'Hogar creado correctamente');
       }
     } catch (error) {
-      console.error('Error creating household:', error);
+      logger.error('Error creating household:', error);
       Alert.alert('Error', 'No se pudo crear el hogar');
     }
   };
@@ -252,7 +253,7 @@ export default function ProfileScreen() {
         .limit(1);
 
       if (checkError) {
-        console.error('Error checking existing invitations:', checkError);
+        logger.error('Error checking existing invitations:', checkError);
         Alert.alert('Error', 'No se pudo verificar invitaciones existentes');
         return;
       }
@@ -280,7 +281,7 @@ export default function ProfileScreen() {
         .single();
 
       if (error) {
-        console.error('Error creating invitation:', error);
+        logger.error('Error creating invitation:', error);
         Alert.alert('Error', 'No se pudo generar el código de invitación');
         return;
       }
@@ -291,7 +292,7 @@ export default function ProfileScreen() {
         setShowInvitationModal(true);
       }
     } catch (error) {
-      console.error('Error generating invitation:', error);
+      logger.error('Error generating invitation:', error);
       Alert.alert('Error', 'No se pudo generar el código de invitación');
     }
   };
@@ -321,7 +322,7 @@ export default function ProfileScreen() {
         refreshHouseholds(); // Recargar hogares del usuario
       }
     } catch (error) {
-      console.error('Error joining household:', error);
+      logger.error('Error joining household:', error);
       Alert.alert('Error', 'No se pudo unir al hogar');
     }
   };
@@ -331,16 +332,16 @@ export default function ProfileScreen() {
   };
 
   const handleSignOut = async () => {
-    console.log('Botón de cerrar sesión presionado');
+    logger.debug('Botón de cerrar sesión presionado');
     
     try {
-      console.log('Llamando a signOut directamente...');
+      logger.debug('Llamando a signOut directamente...');
       setIsSigningOut(true);
       await signOut();
-      console.log('signOut completado');
+      logger.debug('signOut completado');
       Alert.alert('Éxito', 'Sesión cerrada correctamente');
     } catch (error) {
-      console.error('Error al cerrar sesión:', error);
+      logger.error('Error al cerrar sesión:', error);
       Alert.alert('Error', 'No se pudo cerrar sesión. Intenta nuevamente.');
     } finally {
       setIsSigningOut(false);
@@ -441,7 +442,7 @@ export default function ProfileScreen() {
       setShowEditHouseholdModal(false);
       refreshHouseholds(); // Recargar la lista usando el contexto
     } catch (error) {
-      console.error('Error updating household:', error);
+      logger.error('Error updating household:', error);
       Alert.alert('Error', 'No se pudo actualizar el hogar');
     }
   };
@@ -1209,7 +1210,7 @@ export default function ProfileScreen() {
                 ...getShadowStyle(),
               }}
               onPress={() => {
-                console.log('TouchableOpacity presionado');
+                logger.debug('TouchableOpacity presionado');
                 handleSignOut();
               }}
               disabled={isSigningOut}

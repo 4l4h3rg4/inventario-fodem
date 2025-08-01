@@ -1,5 +1,5 @@
 import { supabase } from '../config/supabase';
-
+import { logger } from '../utils/logger';
 // Iconos disponibles para los hogares
 export const HOUSEHOLD_ICONS = [
   '🏠', '🏡', '🏘️', '🏚️', '🏗️', '🏭', '🏢', '🏬', '🏣', '🏤', '🏥', '🏦', '🏨', '🏪', '🏫', '🏩',
@@ -101,7 +101,7 @@ export class HouseholdService {
         });
 
       if (memberError) {
-        console.error('Error agregando miembro:', memberError);
+        logger.error('Error agregando miembro:', memberError);
       }
 
       return { data: household, error: null };

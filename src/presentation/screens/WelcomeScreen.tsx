@@ -12,6 +12,7 @@ import {
 import { useRouter } from 'expo-router';
 import { FODEM_COLORS } from '../../shared/constants/colors';
 import { HouseholdService } from '../../shared/services/householdService';
+import { logger } from '../../shared/utils/logger';
 import { FodemLogo } from '../components/FodemLogo';
 import { IconSelector } from '../components/IconSelector';
 import { ErrorBoundary } from '../components/ErrorBoundary';
@@ -55,7 +56,7 @@ export function WelcomeScreen() {
         router.replace('/(tabs)');
       }
     } catch (error) {
-      console.error('Error creando hogar:', error);
+      logger.error('Error creando hogar:', error);
       Alert.alert('Error', 'No se pudo crear el hogar. Intenta nuevamente.');
     } finally {
       setLoading(false);
@@ -83,7 +84,7 @@ export function WelcomeScreen() {
         router.replace('/(tabs)');
       }
     } catch (error) {
-      console.error('Error joining household:', error);
+      logger.error('Error joining household:', error);
       Alert.alert('Error', 'No se pudo unir al hogar. Verifica el código e intenta nuevamente.');
     } finally {
       setLoading(false);

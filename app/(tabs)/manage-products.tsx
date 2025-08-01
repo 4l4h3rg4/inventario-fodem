@@ -10,6 +10,7 @@ import { useAuth } from '../../src/shared/contexts/AuthContext';
 import { useHousehold } from '../../src/shared/contexts/HouseholdContext';
 import { ProductService, Product, CreateProductData } from '../../src/shared/services/productService';
 
+import { logger } from '../../src/shared/utils/logger';
 export default function ManageProductsScreen() {
   const { user } = useAuth();
   const { 
@@ -48,13 +49,13 @@ export default function ManageProductsScreen() {
       const { data, error } = await ProductService.getHouseholdProducts(currentHousehold.id);
       
       if (error) {
-        console.error('Error loading products:', error);
+        logger.error('Error loading products:', error);
         return;
       }
 
       setProducts(data || []);
     } catch (error) {
-      console.error('Error loading products:', error);
+      logger.error('Error loading products:', error);
     }
   };
 
@@ -97,7 +98,7 @@ export default function ManageProductsScreen() {
         Alert.alert('Éxito', 'Producto actualizado correctamente');
       }
     } catch (error) {
-      console.error('Error updating product:', error);
+      logger.error('Error updating product:', error);
       Alert.alert('Error', 'No se pudo actualizar el producto');
     }
   };
@@ -123,7 +124,7 @@ export default function ManageProductsScreen() {
         Alert.alert('Éxito', 'Producto eliminado correctamente');
       }
     } catch (error) {
-      console.error('Error deleting product:', error);
+      logger.error('Error deleting product:', error);
       Alert.alert('Error', 'No se pudo eliminar el producto');
     } finally {
       setShowDeleteConfirmModal(false);

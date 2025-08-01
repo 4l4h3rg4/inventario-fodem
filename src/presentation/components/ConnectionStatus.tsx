@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { FODEM_COLORS } from '../../shared/constants/colors';
 import { supabase } from '../../shared/config/supabase';
 
+import { logger } from '../../shared/utils/logger';
 interface ConnectionStatusProps {
   visible?: boolean;
 }
@@ -32,14 +33,14 @@ export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({ visible = fa
       const { data, error } = await supabase.from('households').select('count').limit(1);
       
       if (error) {
-        console.log('🔍 Error de conexión:', error.message);
+        logger.debug('🔍 Error de conexión:', error.message);
         setIsConnected(false);
       } else {
-        console.log('🔍 Conexión exitosa');
+        logger.debug('🔍 Conexión exitosa');
         setIsConnected(true);
       }
     } catch (error) {
-      console.log('🔍 Error verificando conexión:', error);
+      logger.debug('🔍 Error verificando conexión:', error);
       setIsConnected(false);
     }
   };

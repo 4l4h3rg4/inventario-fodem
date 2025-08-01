@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../shared/config/supabase';
 import { Database } from '../../shared/config/supabase';
 
+import { logger } from '../../shared/utils/logger';
 type Product = Database['public']['Tables']['products']['Row'];
 
 export const useProducts = (householdId?: string) => {
@@ -95,7 +96,7 @@ export const useProducts = (householdId?: string) => {
       if (error) throw error;
       return data || [];
     } catch (err) {
-      console.error('Error getting low stock products:', err);
+      logger.error('Error getting low stock products:', err);
       return [];
     }
   };
@@ -110,7 +111,7 @@ export const useProducts = (householdId?: string) => {
       if (error) throw error;
       return data || [];
     } catch (err) {
-      console.error('Error generating shopping list:', err);
+      logger.error('Error generating shopping list:', err);
       return [];
     }
   };

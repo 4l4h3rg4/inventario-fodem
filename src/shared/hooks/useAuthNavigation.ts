@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { useAuth } from '../contexts/AuthContext';
 import { HouseholdService } from '../services/householdService';
 
+import { logger } from '../utils/logger';
 export const useAuthNavigation = () => {
   const { user, loading } = useAuth();
 
@@ -19,7 +20,7 @@ export const useAuthNavigation = () => {
         const { data: households, error } = await HouseholdService.getUserHouseholds();
         
         if (error) {
-          console.error('Error checking households:', error);
+          logger.error('Error checking households:', error);
           router.replace('/welcome');
           return;
         }
@@ -30,7 +31,7 @@ export const useAuthNavigation = () => {
           router.replace('/welcome');
         }
       } catch (error) {
-        console.error('Error in navigation check:', error);
+        logger.error('Error in navigation check:', error);
         router.replace('/welcome');
       }
     };
