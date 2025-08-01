@@ -5,7 +5,7 @@
   "devCommand": "npx expo start --web",
   "functions": {
     "app/**/*.tsx": {
-      "runtime": "nodejs18.x"
+      "runtime": "nodejs18"
     }
   },
   "rewrites": [
